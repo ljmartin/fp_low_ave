@@ -3,14 +3,12 @@ import numpy as np
 import pandas as pd
 import mmh3
 
+from joblib import Parallel, delayed
+
 from rdkit import Chem
-
 from rdkit.Chem.rdReducedGraphs import GetErGFingerprint
-from rdkit.Chem import rdFingerprintGenerator
-from rdkit.Chem import MACCSkeys
-
+from rdkit.Chem import rdFingerprintGenerator, MACCSkeys
 from rdkit.Chem.rdmolops import PatternFingerprint, LayeredFingerprint, RDKFingerprint
-
 from rdkit.Chem.Pharm2D import Gobbi_Pharm2D,Generate
 
 def makeMols(num=None):
@@ -18,7 +16,7 @@ def makeMols(num=None):
     mols = list()
     for smile in smiles[0].iloc[0:num]:
         mols.append(Chem.MolFromSmiles(smile))
-    return mols
+    return np.array(mols)
 
 def get_reduced_graphs(mols):
     fps = list()
@@ -59,11 +57,16 @@ def get_2dpharm(mols, fp_size=2000):
     factory = Gobbi_Pharm2D.factory
     fps = list()
     for mol in mols:
-        sig = Generate.Gen2DFingerprint(mol,factory)
-        indices = np.array([mmh3.hash(str(i)) for i in sig.GetOnBits()])%fp_size
-        fp = np.zeros(fp_size, dtype=int)
-        fp[indices]=1
-        fps.append(fp)
+        try:
+            sig = Generate.Gen2DFingerprint(mol,factory)
+            indices = np.array([mmh3.hash(str(i)) for i in sig.GetOnBits()])%fp_size
+            fp = np.zeros(fp_size, dtype=int)
+            if len(indices)>0:
+                fp[indices]=1
+            fps.append(fp)
+        except Exception:
+            print('ERROR')
+            print(Chem.MolToSmiles(mol))
     fps = np.array(fps)
     return sparse.csr_matrix(fps).astype('int')
 
@@ -101,17 +104,30 @@ def get_morgan_features(mols):
     for mol in mols:
         fp = np.array(gen_mo.GetFingerprint(mol))
         fps.append(fp)
-    fps = np.array(fp)
+    fps = np.array(fps)
     return sparse.csr_matrix(fps).astype('int')
 
 if __name__ == '__main__':
-    funcs = [get_reduced_graphs, get_maccs, get_rdk_fps, get_pattern_fps,
-             get_layered_fps, get_2dpharm, get_atom_pair, get_topological_torsion,
-             get_morgan, get_morgan_features]
-    names = ['erg', 'maccs', 'rdk', 'pattern', 'layered', '2dpharm',
-             'atom_pair', 'topo_torsion', 'morgan', 'morgan_feat']
 
     mols = makeMols()
+
+    #These ones are pickleable:
+    funcs = [get_2dpharm, get_maccs, get_atom_pair, get_topological_torsion,
+             get_morgan, get_morgan_features]
+    names = ['2dpharm', 'maccs', 'atom_pair', 'topo_torsion',
+             'morgan', 'morgan_feat']
+    n_jobs = 8
+    for func, name in zip(funcs, names):
+        print(f'Making {name} fingerprints')
+        split_fps = Parallel(n_jobs=n_jobs)(delayed(func)(i) for i in np.array_split(mols, n_jobs))
+        fps = sparse.vstack([*split_fps])
+        sparse.save_npz('./processed_data/fingerprints/'+name+'.npz', fps)
+
+
+    #these ones are not pickleable:
+    funcs = [get_reduced_graphs, get_rdk_fps, get_pattern_fps,
+             get_layered_fps]
+    names = ['erg', 'rdk', 'pattern', 'layered']
     for func, name in zip(funcs, names):
         print(f'Making {name} fingerprints')
         fps = func(mols)
