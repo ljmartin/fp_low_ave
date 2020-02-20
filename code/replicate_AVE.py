@@ -19,7 +19,7 @@ np.random.seed(utils.getSeed())
 #also using single-linkage clustering.
 
 #load up data:
-x, y = utils.load_feature_and_label_matrices(type='ecfp')
+x, y = utils.load_feature_and_label_matrices(type='morgan')
 ##select a subset of columns of 'y' to use as a test matrix:
 #this is the same each time thanks to setting the random.seed.
 col_indices = np.random.choice(243, 10, replace=False)
@@ -53,7 +53,7 @@ for _ in tqdm(range(300)):
     idx = np.random.choice(y_.shape[1])
 
     #choose a random clustering cutoff and cluster:
-    cutoff = stats.uniform(0.05, 0.425).rvs()
+    cutoff = stats.uniform(0.05, 0.7).rvs()
     clust = AgglomerativeClustering(n_clusters=None, distance_threshold=cutoff, linkage='single', affinity='precomputed')
     clust.fit(distance_matrix)
     

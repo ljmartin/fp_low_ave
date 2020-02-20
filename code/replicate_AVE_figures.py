@@ -91,7 +91,7 @@ utils.plot_fig_label(ax[1], 'B.')
 
 
 ax[2].scatter(cutoffs, aves, c=targets, alpha=utils.ALPHA)
-ax[2].set_xlabel('Linkage cutoff (jaccard)')
+ax[2].set_xlabel('Linkage cutoff (Dice)')
 ax[2].set_ylabel('AVE score')
 ax[2].grid()
 utils.plot_fig_label(ax[2], 'C')
@@ -102,7 +102,6 @@ plt.close(fig)
 
 
 fig, ax = plt.subplots(1)
-
 ax.scatter(aves, precisions, label='Precision', c='C6', alpha=utils.ALPHA)
 ax.scatter(aves, tprs, label='TPR (p>0.5)', alpha=utils.ALPHA)
 ax.scatter(aves, fprs, label='FPR (p>0.5)', alpha=utils.ALPHA)
@@ -110,8 +109,18 @@ ax.set_xlabel('AVE score')
 ax.set_ylabel('Score')
 ax.grid()
 ax.legend()
-
 fig.savefig('./processed_data/replicate_AVE/tpr_vs_fpr.png')
+
+fig, ax = plt.subplots(1)
+ax.scatter(cutoffs, np.log10(sizes[:,1] / sizes[:,0]), label='Test actives / train actives', alpha=utils.ALPHA)
+ax.scatter(cutoffs, np.log10(sizes[:,3] / sizes[:,2]), label='Test inactives / train inactives', alpha=utils.ALPHA)
+ax.axhline(-0.63, label='20%', linestyle='--', c='C5') 
+
+ax.set_xlabel('Linkage cutoff (Dice)')
+ax.set_ylabel('Log10(ratio)')
+ax.grid()
+ax.legend()
+fig.savefig('./processed_data/replicate_AVE/test_train_size.png')
 
 #Transform to do linear regression:
 #Transform to do linear regression:
@@ -136,10 +145,12 @@ pe1 = (mpe.Stroke(linewidth=5, foreground='black'),
 
 for score, label in zip([np.array(average_precisions), np.array(aurocs)], ['AP', 'AUROC']):
     x_points = np.array(aves)
-    x_points = x_points[score!=1]
+    #outlier mask:
+    mask = score<0.99999
+    x_points = x_points[mask]
 
-    score = score[score!=1]
-    print(score)
+    score = score[mask]
+
     y_points = np.log10((score)/(1-score))
     
     result = regress(x_points, y_points)

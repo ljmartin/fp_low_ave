@@ -14,10 +14,9 @@ import matplotlib.pyplot as plt
 def getSeed(seed=500):
     return seed
 
-def load_feature_and_label_matrices(type='ecfp'):
+def load_feature_and_label_matrices(type='morgan'):
     y = sparse.load_npz('./raw_data/y.npz').toarray()
-    if type=='ecfp':
-        x = sparse.load_npz('./processed_data/fingerprints/morgan.npz').toarray()
+    x = sparse.load_npz('./processed_data/fingerprints/'+type+'.npz')
     return x, y
 
 
