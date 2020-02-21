@@ -27,7 +27,7 @@ x_, y_ = utils.get_subset(x, y, indices=col_indices)
 
 
 #Fingerprints to be compared:
-fp_names = ['morgan', '2dpharm', 'atom_pair', 'erg', 'layered', 'maccs', 'morgan_feat', 'pattern', 'rdk', 'topo_torsion']
+fp_names = utils.getNames()
 fp_dict = {}
 fp_probas = {}
 
@@ -67,7 +67,7 @@ for _ in tqdm(range(300)):
     idx = np.random.choice(y_.shape[1])
 
     #choose a random clustering cutoff and cluster using the original morgan FPs:
-    cutoff = stats.uniform(0.05, 0.7).rvs()
+    cutoff = stats.uniform(0.15, 0.6).rvs()
     clust = AgglomerativeClustering(n_clusters=None, distance_threshold=cutoff, linkage='single', affinity='precomputed')
     clust.fit(distance_matrix)
     

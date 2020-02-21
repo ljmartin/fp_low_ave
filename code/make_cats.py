@@ -105,4 +105,4 @@ if __name__=='__main__':
         fps.append(fp)
 
     fps = np.array(fps)
-    sparse.save_npz('./processed_data/fingerprints/cats.npy', sparse.csr_matrix(fps))
+    sparse.save_npz('./processed_data/fingerprints/cats.npz', sparse.csr_matrix(fps))

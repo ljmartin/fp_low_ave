@@ -14,9 +14,16 @@ import matplotlib.pyplot as plt
 def getSeed(seed=500):
     return seed
 
+def getNames():
+    return ['morgan', '2dpharm', 'atom_pair', 'erg', 'cats', 'layered', 'maccs', 'morgan_feat', 'pattern', 'rdk', 'topo_torsion']
+
 def load_feature_and_label_matrices(type='morgan'):
     y = sparse.load_npz('./raw_data/y.npz').toarray()
-    x = sparse.load_npz('./processed_data/fingerprints/'+type+'.npz')
+    if type=='cats':
+        x = sparse.load_npz('./processed_data/fingerprints/cats.npz').toarray()
+        x = sparse.csr_matrix(StandardScaler().fit_transform(x))
+    else:
+        x = sparse.load_npz('./processed_data/fingerprints/'+type+'.npz')
     return x, y
 
 
