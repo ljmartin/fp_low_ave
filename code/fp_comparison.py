@@ -33,6 +33,12 @@ fp_probas = {}
 
 #Load up the dictionaries with the relevant feature matrices for each fingerprint:
 for fp in fp_names:
+    ####
+    ###Doing a direct comparison with CATS here:
+    ####
+    if fp not in ['morgan', 'cats']:
+        continue
+    print(fp)
     print('Loading:', fp)
     featureMatrix, labels = utils.load_feature_and_label_matrices(type=fp)
     featureMatrix_, labels__ = utils.get_subset(featureMatrix, y, indices=col_indices)
@@ -62,12 +68,12 @@ cutoffs = list()
 aves = list()
 sizes = list()
 
-for _ in tqdm(range(300)):
+for _ in tqdm(range(150)):
     #choose a random target:
     idx = np.random.choice(y_.shape[1])
 
     #choose a random clustering cutoff and cluster using the original morgan FPs:
-    cutoff = stats.uniform(0.15, 0.6).rvs()
+    cutoff = np.random.uniform(0.3, 0.7)
     clust = AgglomerativeClustering(n_clusters=None, distance_threshold=cutoff, linkage='single', affinity='precomputed')
     clust.fit(distance_matrix)
     
@@ -83,7 +89,7 @@ for _ in tqdm(range(300)):
     num_test_pos = (y_test[:,idx]==1).sum()
     num_train_neg = (y_train[:,idx]==0).sum() 
     num_test_neg = (y_test[:,idx]==1).sum()
-    if min(num_train_pos, num_test_pos, num_train_neg, num_test_neg)>10:
+    if min(num_train_pos, num_test_pos, num_train_neg, num_test_neg)>30:
         
     	#the feature matrices:
         matrices = utils.split_feature_matrices(x_train, x_test, y_train, y_test, idx)
@@ -93,6 +99,9 @@ for _ in tqdm(range(300)):
         AVE = utils.calc_AVE(distances)
 
         for fp in fp_names:
+            if fp not in ['morgan', 'cats']:
+                continue
+
             x_train, x_test, y_train, y_test = utils.make_cluster_split(fp_dict[fp], y_, clust, test_clusters=test_clusters)
             #Fit some ML model (can be anything - logreg here):
             clf = LogisticRegression(solver='lbfgs', max_iter=1000)
@@ -117,4 +126,6 @@ np.save('./processed_data/fp_comparison/cutoffs.npy', np.array(cutoffs))
 np.save('./processed_data/fp_comparison/test_labels.npy', np.array(test_labels))
 
 for fp in fp_names:
+    if fp not in ['morgan', 'cats']:
+        continue
     np.save('./processed_data/fp_comparison/'+fp+'_probas.npy', np.array(fp_probas[fp]))

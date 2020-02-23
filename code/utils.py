@@ -175,12 +175,37 @@ def calc_distance_matrices(matrices, metric='dice'):
         distFun = fast_jaccard
     if metric=='dice':
         distFun = fast_dice
-    
-    #faster using sparse input data to avoid calculating lots of zeroes:
-    aTest_aTrain_D = distFun(x_actives_test, x_actives_train)
-    aTest_iTrain_D = distFun(x_actives_test, x_inactives_train)
-    iTest_iTrain_D = distFun(x_inactives_test, x_inactives_train)
-    iTest_aTrain_D = distFun(x_inactives_test, x_actives_train)
+
+    if x_inactives_train.shape[0]>15000:
+        if isinstance(x_actives_test, sparse.csr_matrix):
+            x_actives_test = x_actives_test.toarray()
+        if isinstance(x_actives_train, sparse.csr_matrix):
+            x_actives_train = x_actives_train.toarray()
+        if isinstance(x_inactives_test, sparse.csr_matrix):
+            x_inactives_test = x_inactives_test.toarray()
+        if isinstance(x_inactives_train, sparse.csr_matrix):
+            x_inactives_train = x_inactives_train.toarray()
+
+        print(type(x_actives_test), type(x_actives_train), type(x_inactives_test), type(x_inactives_train))
+        print('building actives train_index', x_actives_train.shape[0])
+        x_actives_train_index = NNDescent(x_actives_train, metric='jaccard')
+        print('building inactives train index', x_inactives_train.shape[0])
+        x_inactives_train_index = NNDescent(x_inactives_train, metric='jaccard')
+        print('querying actives train with actives test', x_actives_test.shape[0], x_actives_train.shape[0])
+        _, aTest_aTrain_D = x_actives_train_index.query(x_actives_test)
+        print('querying inactives train with actives test', x_actives_test.shape[0], x_inactives_train.shape[0])
+        _, aTest_iTrain_D = x_inactives_train_index.query(x_actives_test)
+        print('querying inactives train with inactives test', x_inactives_test.shape[0], x_inactives_train.shape[0])
+        _, iTest_iTrain_D = x_inactives_train_index.query(x_inactives_test)
+        print('querying actives train with inactives test', x_actives_test.shape[0], x_inactives_train.shape[0])
+        _, iTest_aTrain_D = x_actives_train_index.query(x_inactives_test)
+
+    else:
+        #faster using sparse input data to avoid calculating lots of zeroes:
+        aTest_aTrain_D = distFun(x_actives_test, x_actives_train)
+        aTest_iTrain_D = distFun(x_actives_test, x_inactives_train)
+        iTest_iTrain_D = distFun(x_inactives_test, x_inactives_train)
+        iTest_aTrain_D = distFun(x_inactives_test, x_actives_train)
     return aTest_aTrain_D, aTest_iTrain_D, iTest_iTrain_D, iTest_aTrain_D
     
 def calc_AVE(distances):

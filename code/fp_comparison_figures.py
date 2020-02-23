@@ -19,6 +19,9 @@ fp_names = utils.getNames()
 fp_probas = dict()
 fp_average_precisions = dict()
 for fp in fp_names:
+    if fp not in ['morgan', 'cats']:
+        continue
+    
     fp_probas[fp] = np.load('./processed_data/fp_comparison/'+fp+'_probas.npy', allow_pickle=True)
     fp_average_precisions[fp] = []
 
@@ -32,6 +35,9 @@ sizes = np.load('processed_data/fp_comparison/sizes.npy', allow_pickle=True)
 average_precisions = list()
 
 for fp in fp_names:
+    if fp not in ['morgan', 'cats']:
+        continue
+
     test_probas = fp_probas[fp]
     for probas, y_test in tqdm(zip(test_probas, test_labels)):
         average_precision = average_precision_score(y_test, probas)    
@@ -39,6 +45,9 @@ for fp in fp_names:
 
 
 for fp in fp_names:
+    if fp not in ['morgan', 'cats']:
+        continue
+
     fig, ax = plt.subplots(1)
     ax.scatter(aves, fp_average_precisions[fp], c=targets, alpha=utils.ALPHA)
     ax.set_xlabel('AVE score')
@@ -49,6 +58,9 @@ for fp in fp_names:
 
 fig, ax = plt.subplots(1)
 for fp in fp_names:
+    if fp not in ['morgan', 'cats']:
+        continue
+
     ax.scatter(np.array(aves)+np.random.uniform(-0.01,0.01, len(aves)), fp_average_precisions[fp], s=25, alpha=utils.ALPHA, label=fp)
 
     
@@ -71,11 +83,18 @@ def regress(x, y):
     result = model.fit()
     return result
 
-pe1 = (mpe.Stroke(linewidth=5, foreground='black'),
+pe1 = (mpe.Stroke(linewidth=1, foreground='black'),
        mpe.Stroke(foreground='white',alpha=1),
        mpe.Normal())
 
 for fp in fp_names:
+    if fp not in ['morgan', 'cats']:
+        continue
+
+    if fp in ['cats', 'erg', '2dpharm', 'morgan_feat', 'maccs']:
+        linestyle='--'
+    else:
+        linestyle='-'
     score = np.array(fp_average_precisions[fp])
     x_points = np.array(aves)
     #outlier mask:
@@ -84,8 +103,12 @@ for fp in fp_names:
     score = score[mask]
     y_points = np.log10((score)/(1-score))
     result = regress(x_points, y_points)
-    ax.plot(xrange, result.params[0]+result.params[1]*xrange, label=fp+' $R^2$: '+str(np.around(result.rsquared,3)), path_effects=pe1, alpha=0.5)
+    ax.plot(xrange, result.params[0]+result.params[1]*xrange,
+            label=fp+' $R^2$: '+str(np.around(result.rsquared,3)),
+            path_effects=pe1,
+            alpha=0.5, linewidth=3, linestyle=linestyle)
     ax.scatter(x_points+np.random.uniform(-0.01, 0.01, len(x_points)), y_points, s=25, linewidth=0.4, alpha=utils.ALPHA)
+    print(fp, result.params[0])
 
 ax.set_xlabel('AVEs')
 ax.set_ylabel('Score')

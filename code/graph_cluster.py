@@ -15,7 +15,7 @@ np.random.seed(utils.getSeed())
 x, y = utils.load_feature_and_label_matrices(type='morgan')
 ##select a subset of columns of 'y' to use as a test matrix:
 #this is the same each time thanks to setting the random.seed.
-col_indices = np.random.choice(243, 10, replace=False)
+col_indices = np.random.choice(243, 100, replace=False)
 x_, y_ = utils.get_subset(x, y, indices=col_indices)
 
 
@@ -30,7 +30,7 @@ print('- calculates AVE bias for that split,')
 print('')
 
 
-clusterer = ParisClusterer(x_)
+clusterer = ParisClusterer(x_.toarray())
 clusterer.buildAdjacency()
 clusterer.fit()
 
@@ -41,16 +41,20 @@ cutoffs = list()
 aves = list()
 sizes = list()
 
-for _ in tqdm(range(5)):
+for _ in tqdm(range(50)):
     #choose a random target:
     idx = np.random.choice(y_.shape[1])
 
     #choose a random clustering cutoff and cluster:
-    clusterSize = np.random.randint(200,2500)
-    clusterer.balancedCut(clusterSize)
+    clusterSize = np.random.randint(800,5000)
+    clusterer.balanced_cut(clusterSize)
     
     #Get the train test split:
-    x_train, x_test, y_train, y_test = utils.make_cluster_split(x_, y_, clusterer)
+    pos_labels = np.unique(clusterer.labels_[y_[:,idx]==1])
+    neg_labels = np.unique(clusterer.labels_[y_[:,idx]!=1])
+    test_labels = list(np.random.choice(pos_labels, int(0.2*len(pos_labels)), replace=False))+list(np.random.choice(neg_labels, int(0.2*len(neg_labels)), replace=False))
+    
+    x_train, x_test, y_train, y_test = utils.make_cluster_split(x_, y_, clusterer, test_clusters=np.array(test_labels))
 
     #ensure you have enough positive ligands for this target in both the train / test folds: 
     num_train_pos = (y_train[:,idx]==1).sum()
@@ -58,7 +62,8 @@ for _ in tqdm(range(5)):
     num_train_neg = (y_train[:,idx]==0).sum() 
     num_test_neg = (y_test[:,idx]==1).sum()
     #ensure there is enough data for each class in each split:
-    if min(num_train_pos, num_test_pos, num_train_neg, num_test_neg)>10:
+    print(clusterSize, min(num_train_pos, num_test_pos, num_train_neg, num_test_neg))
+    if min(num_train_pos, num_test_pos, num_train_neg, num_test_neg)>50:
 
     	#the feature matrices:
         matrices = utils.split_feature_matrices(x_train, x_test, y_train, y_test, idx)
@@ -71,11 +76,11 @@ for _ in tqdm(range(5)):
         aves.append(AVE)
         sizes.append([i.shape[0] for i in matrices])
         targets.append(idx)
-        cutoffs.append(cutoff)
+        cutoffs.append(clusterSize)
 
 ##Save all the AVEs and model prediction data:
 np.save('./processed_data/graph_cluster/aves.npy', np.array(aves))
-np.save('./processed_data//sizes.npy', np.array(sizes))
+np.save('./processed_data/graph_cluster/sizes.npy', np.array(sizes))
 np.save('./processed_data/graph_cluster/targets.npy', np.array(targets))
 np.save('./processed_data/graph_cluster/cutoffs.npy', np.array(cutoffs))
 
