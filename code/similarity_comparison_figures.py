@@ -16,12 +16,15 @@ from tqdm import tqdm
 utils.set_mpl_params()
 fp_names = utils.getNames()
 
-fp_probas = dict()
-fp_average_precisions = dict()
-for fp in fp_names:
-    if fp not in ['morgan', 'cats']:
-        continue
-    
-    fp_probas[fp] = np.load('./processed_data/fp_comparison/'+fp+'_probas.npy', allow_pickle=True)
-    fp_average_precisions[fp] = []
+fig, ax = plt.subplots()
 
+for fp in fp_names:
+    scores = np.load('./processed_data/similarities/'+fp+'_roc.npy')
+    low = np.load('./processed_data/similarities/'+fp+'_low.npy')
+    high = np.load('./processed_data/similarities/'+fp+'_high.npy')
+
+    ax.plot(scores, label=fp)
+
+ax.legend()
+ax.grid()
+fig.savefig('./processed_data/similarities/roc.png')

@@ -8,6 +8,7 @@ from scipy.spatial.distance import pdist, squareform, cdist
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics import pairwise_distances
 from tqdm import tqdm
 
 import statsmodels.stats.api as sms
@@ -15,23 +16,17 @@ import statsmodels.stats.api as sms
 ##Set a random seed to make it reproducible!
 np.random.seed(utils.getSeed())
 
-#load up data:
-x, y = utils.load_feature_and_label_matrices(type='morgan')
-
 #Fingerprints to be compared:
 fp_names = utils.getNames()
 fp_dict = {}
 fp_similarities = {}
 
-#Load up the dictionaries with the relevant feature matrices for each fingerprint:
-for fp in fp_names:
-    print('Loading:', fp)
-    featureMatrix, labels = utils.load_feature_and_label_matrices(type=fp)
-    fp_dict[fp]=sparse.csr_matrix(featureMatrix)
     
 for fp in fp_names:
+    print('Loading:', fp)
+    x_, y = utils.load_feature_and_label_matrices(type=fp)
     print('Analysing:', fp)
-    x_ = fp_dict[fp]
+    
     scores = list()
     for _ in tqdm(range(1000)):
         idx = np.random.choice(x_.shape[0])
@@ -39,7 +34,7 @@ for fp in fp_names:
         if x_.dtype==int:
             distances = utils.fast_jaccard(lig, x_)
         else:
-            distances = cosine_similarity(lig, x_)
+            distances = 1-cosine_similarity(lig, x_)
         true_labels = y[:,y[idx].nonzero()[0][0]]
         roc = np.cumsum(true_labels[distances.argsort()])/sum(true_labels)
         scores.append(roc)

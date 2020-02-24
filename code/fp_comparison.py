@@ -120,6 +120,4 @@ np.save('./processed_data/fp_comparison/cutoffs.npy', np.array(cutoffs))
 np.save('./processed_data/fp_comparison/test_labels.npy', np.array(test_labels))
 
 for fp in fp_names:
-    if fp not in ['morgan', 'cats']:
-        continue
     np.save('./processed_data/fp_comparison/'+fp+'_probas.npy', np.array(fp_probas[fp]))

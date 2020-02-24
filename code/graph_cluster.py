@@ -24,7 +24,7 @@ print('')
 print('The below:')
 print('- generates a weighted, directed nearest neighbor graph using PyNNDescent')
 print('- generates a linkage tree using the Paris clustering algorithm')
-print('- clusters by cutting the tree in balanced cuts of size U(low=200, high=2000)')
+print('- clusters by cutting the tree in balanced cuts of size U(low=200, high=5000)')
 print('- generates a train/test split based on random assignment of clusters and a randomly selected target,')
 print('- calculates AVE bias for that split,')
 print('')
@@ -46,7 +46,7 @@ for _ in tqdm(range(50)):
     idx = np.random.choice(y_.shape[1])
 
     #choose a random clustering cutoff and cluster:
-    clusterSize = np.random.randint(800,5000)
+    clusterSize = np.random.randint(200,5000)
     clusterer.balanced_cut(clusterSize)
     
     #Get the train test split:

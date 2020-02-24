@@ -19,14 +19,14 @@ fp_names = utils.getNames()
 fp_probas = dict()
 fp_average_precisions = dict()
 for fp in fp_names:
-    fp_probas[fp] = np.load('./processed_data/fp_comparison/'+fp+'_probas.npy', allow_pickle=True)
+    fp_probas[fp] = np.load('./processed_data/graph_fp_comparison/'+fp+'_probas.npy', allow_pickle=True)
     fp_average_precisions[fp] = []
 
-test_labels = np.load('processed_data/fp_comparison/test_labels.npy', allow_pickle=True)
-aves = np.load('processed_data/fp_comparison/aves.npy', allow_pickle=True)
-targets = np.load('processed_data/fp_comparison/targets.npy', allow_pickle=True)
-cutoffs = np.load('processed_data/fp_comparison/cutoffs.npy', allow_pickle=True)
-sizes = np.load('processed_data/fp_comparison/sizes.npy', allow_pickle=True)
+test_labels = np.load('processed_data/graph_fp_comparison/test_labels.npy', allow_pickle=True)
+aves = np.load('processed_data/graph_fp_comparison/aves.npy', allow_pickle=True)
+targets = np.load('processed_data/graph_fp_comparison/targets.npy', allow_pickle=True)
+cutoffs = np.load('processed_data/graph_fp_comparison/cutoffs.npy', allow_pickle=True)
+sizes = np.load('processed_data/graph_fp_comparison/sizes.npy', allow_pickle=True)
 
 
 average_precisions = list()
@@ -45,7 +45,7 @@ for fp in fp_names:
     ax.set_xlabel('AVE score')
     ax.set_ylabel('AP')
     ax.grid()    
-    fig.savefig('./processed_data/fp_comparison/ap_'+fp+'.png')
+    fig.savefig('./processed_data/graph_fp_comparison/ap_'+fp+'.png')
     plt.close(fig)
 
 fig, ax = plt.subplots(1)
@@ -57,7 +57,7 @@ ax.set_xlabel('AVE score')
 ax.set_ylabel('AP')
 ax.grid()    
 ax.legend()
-fig.savefig('./processed_data/fp_comparison/ap_all.png')
+fig.savefig('./processed_data/graph_fp_comparison/ap_all.png')
 plt.close(fig)
 
 
@@ -99,5 +99,5 @@ for fp in fp_names:
 ax.set_xlabel('AVEs')
 ax.set_ylabel('Score')
 ax.legend(loc=9, ncol=2)
-fig.savefig('./processed_data/fp_comparison/regression.png')
+fig.savefig('./processed_data/graph_fp_comparison/regression.png')
 plt.close(fig)
