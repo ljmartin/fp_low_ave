@@ -145,6 +145,7 @@ def fast_dice(X, Y=None):
     cardinality_Y = Y.getnnz(1) #slightly faster on large matrices - 13s vs 16s for 12k x 12k
     return (1-(2*intersect) / (cardinality_X+cardinality_Y.T)).A
 
+
 def calcDistMat( fp1, fp2, metric='jaccard' ):
     """Calculates the pairwise distance matrix between features
     fp1 and fp2"""

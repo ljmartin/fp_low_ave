@@ -7,6 +7,7 @@ from scipy.spatial.distance import pdist, squareform, cdist
 
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 
 import statsmodels.stats.api as sms
@@ -31,15 +32,14 @@ for fp in fp_names:
 for fp in fp_names:
     print('Analysing:', fp)
     x_ = fp_dict[fp]
-    if x_.dtype==int:
-        metric = 'jaccard'
-    else:
-        metric = 'cosine'
     scores = list()
     for _ in tqdm(range(1000)):
         idx = np.random.choice(x_.shape[0])
         lig = x_[idx]
-        distances = cdist(lig.toarray(), x_.toarray(), metric=metric)
+        if x_.dtype==int:
+            distances = utils.fast_jaccard(lig, x_)
+        else:
+            distances = cosine_similarity(lig, x_)
         true_labels = y[:,y[idx].nonzero()[0][0]]
         roc = np.cumsum(true_labels[distances.argsort()])/sum(true_labels)
         scores.append(roc)

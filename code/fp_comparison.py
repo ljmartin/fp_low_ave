@@ -12,12 +12,6 @@ from tqdm import tqdm
 ##Set a random seed to make it reproducible!
 np.random.seed(utils.getSeed())
 
-
-##The J&J benchmark used single-linkage clustering. 
-#Wallach et. al later showed how model performance was related to bias. 
-#Here we reproduce this using a set of train/test splits
-#also using single-linkage clustering.
-
 #load up data:
 x, y = utils.load_feature_and_label_matrices(type='morgan')
 ##select a subset of columns of 'y' to use as a test matrix:
@@ -33,11 +27,11 @@ fp_probas = {}
 
 #Load up the dictionaries with the relevant feature matrices for each fingerprint:
 for fp in fp_names:
-    ####
-    ###Doing a direct comparison with CATS here:
-    ####
-    if fp not in ['morgan', 'cats']:
-        continue
+#    ####
+#    ###Doing a direct comparison with CATS here:
+#    ####
+#    if fp not in ['morgan', 'cats']:
+#        continue
     print(fp)
     print('Loading:', fp)
     featureMatrix, labels = utils.load_feature_and_label_matrices(type=fp)
@@ -99,8 +93,8 @@ for _ in tqdm(range(450)):
         AVE = utils.calc_AVE(distances)
 
         for fp in fp_names:
-            if fp not in ['morgan', 'cats']:
-                continue
+ #           if fp not in ['morgan', 'cats']:
+ #               continue
 
             x_train, x_test, y_train, y_test = utils.make_cluster_split(fp_dict[fp], y_, clust, test_clusters=test_clusters)
             #Fit some ML model (can be anything - logreg here):
