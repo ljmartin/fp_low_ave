@@ -4,6 +4,8 @@ import matplotlib.patheffects as mpe
 
 import utils
 
+import pandas as pd
+
 from sklearn.metrics import precision_score, recall_score, roc_auc_score, label_ranking_average_precision_score
 from sklearn.metrics import label_ranking_loss, confusion_matrix, average_precision_score, auc, precision_recall_curve
 
@@ -30,6 +32,7 @@ sizes = np.load('processed_data/fp_comparison/sizes.npy', allow_pickle=True)
 
 
 average_precisions = list()
+df = pd.DataFrame()
 
 for fp in fp_names:
     test_probas = fp_probas[fp]
@@ -37,7 +40,12 @@ for fp in fp_names:
         average_precision = average_precision_score(y_test, probas)    
         fp_average_precisions[fp].append(average_precision)
 
+    df[fp]=np.array(fp_average_precisions[fp])[aves>0.1]
 
+print(len(df))
+df.to_csv('./processed_data/fp_comparison/fp_comparison.csv', header=True, index=False)
+
+        
 for fp in fp_names:
 
     fig, ax = plt.subplots(1)
