@@ -41,64 +41,85 @@ print('')
 
 
 #These will be used to save all the data so we don't have to repeatedly run this script
-test_labels = list()
-test_probas = list()
 targets = list()
 cutoffs = list()
-aves = list()
-sizes = list()
 
-for _ in tqdm(range(300)):
+aves_before_trim = list()
+aves_after_trim = list()
+auroc_before_trim = list()
+auroc_after_trim = list()
+ap_before_trim = list()
+ap_after_trim = list()
+sizes_before_trim = list()
+sizes_after_trim = list()
+
+
+for _ in tqdm(range(2)):
     #choose a random target:
     idx = np.random.choice(y_.shape[1])
 
     #choose a random clustering cutoff and cluster:
     cutoff = stats.uniform(0.05, 0.7).rvs()
-    clust = AgglomerativeClustering(n_clusters=None, distance_threshold=cutoff, linkage='single', affinity='precomputed')
-    clust.fit(distance_matrix)
+    clusterer = AgglomerativeClustering(n_clusters=None, distance_threshold=cutoff, linkage='single', affinity='precomputed')
+    clusterer.fit(distance_matrix)
+
+    clabels = np.unique(clusterer.labels_)
+    pos_labels = np.unique(clusterer.labels_[y_[:,idx]==1])
+    neg_labels = clabels[~np.isin(clabels, pos_labels)]
+    if min(len(pos_labels), len(neg_labels))<2:
+        print('Not enough positive clusters to split')
+        continue
     
-    #Get the train test split:
-    x_train, x_test, y_train, y_test = utils.make_cluster_split(x_, y_, clust)
+    test_clusters, train_clusters = utils.split_clusters(pos_labels, neg_labels, 0.2, 0.2, shuffle=True)
 
-    #ensure you have enough positive ligands for this target in both the train / test folds: 
-    num_train_pos = (y_train[:,idx]==1).sum()
-    num_test_pos = (y_test[:,idx]==1).sum()
-    num_train_neg = (y_train[:,idx]==0).sum() 
-    num_test_neg = (y_test[:,idx]==1).sum()
-    #ensure there is enough data for each class in each split:
-    if min(num_train_pos, num_test_pos, num_train_neg, num_test_neg)>10:
+    actives_test_idx, actives_train_idx, inactives_test_idx, inactives_train_idx = utils.get_four_matrices(y_,idx,clusterer,test_clusters,train_clusters)
 
-    	#the feature matrices:
-        matrices = utils.split_feature_matrices(x_train, x_test, y_train, y_test, idx)
-    	#pairwise distance matrices between all the above in 'martices'
-        distances = utils.calc_distance_matrices(matrices)
-    	#calc the AVE bias:
-        AVE = utils.calc_AVE(distances)
-        #calc the VE bias;
-        #VE = utils.calc_VE(distances)
-
-        #Fit some ML model (can be anything - logreg here):
-        clf = LogisticRegression(solver='lbfgs', max_iter=500)
-        clf.fit(sparse.csr_matrix(x_train), y_train[:,idx])
-        #make probaility predictions for the positive class:
-        proba = clf.predict_proba(x_test)[:,1]
-
-	##Add all the data to our lists:
-        aves.append(AVE)
-        sizes.append([i.shape[0] for i in matrices])
-        #ves.append(VE)
-        targets.append(idx)
-        cutoffs.append(cutoff)
-        test_probas.append(proba)
-        test_labels.append(y_test[:,idx])
+    ave= utils.calc_AVE_quick(distance_matrix, actives_train_idx, actives_test_idx,inactives_train_idx, inactives_test_idx)
+    aves_before_trim.append(ave)
 
 
+    #Now we will trim some nearest neighbours and by doing so, reduce AVE.
+    #trim from the inactives/train matrix first:
+    inactive_dmat = distance_matrix[inactives_test_idx]
+    new_inactives_train_idx = utils.trim(inactive_dmat, 
+                                       inactives_train_idx, 
+                                       inactives_test_idx,
+                                             fraction_to_trim=0.2)
+    #then trim from the actives/train matrix:
+    active_test_train_dmat = distance_matrix[actives_test_idx]
+    new_actives_train_idx = utils.trim(active_test_train_dmat,
+                                    actives_train_idx, 
+                                    actives_test_idx,
+                                     fraction_to_trim=0.2)
+
+    #now calculate AVE with this new split:
+    ave= utils.calc_AVE_quick(distance_matrix, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx)
+    aves_after_trim.append(ave)
+
+    #evaluate a LogReg model using the original single-linkage split
+    results = utils.evaluate_split(x_, y_, idx, actives_train_idx, actives_test_idx, inactives_train_idx, inactives_test_idx, auroc=True, ap=True)
+    auroc_before_trim.append(results['auroc'])
+    ap_before_trim.append(results['ap'])
+
+    #evaluate a LogReg model using the new (lower AVE) split:
+    results = utils.evaluate_split(x_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=True, ap=True)
+    auroc_after_trim.append(results['auroc'])
+    ap_after_trim.append(results['ap'])
+    
+    cutoffs.append(cutoff)
+#    sizes.append([i.shape[0] for i in matrices])
+    targets.append(idx)
+
+    
 ##Save all the AVEs and model prediction data:
-np.save('./processed_data/replicate_AVE/aves.npy', np.array(aves))
-np.save('./processed_data/replicate_AVE/sizes.npy', np.array(sizes))
-#np.save('./processed_data/replicate_AVE/ves.npy', np.array(ves))
+np.save('./processed_data/replicate_AVE/aves_before_trim.npy', np.array(aves_before_trim))
+np.save('./processed_data/replicate_AVE/aves_after_trim.npy', np.array(aves_after_trim))
+np.save('./processed_data/replicate_AVE/auroc_before_trim.npy', np.array(auroc_before_trim))
+np.save('./processed_data/replicate_AVE/auroc_after_trim.npy', np.array(auroc_after_trim))
+np.save('./processed_data/replicate_AVE/ap_before_trim.npy', np.array(ap_before_trim))
+np.save('./processed_data/replicate_AVE/ap_after_trim.npy', np.array(ap_after_trim))
+#np.save('./processed_data/replicate_AVE/sizes.npy', np.array(sizes))
 np.save('./processed_data/replicate_AVE/targets.npy', np.array(targets))
 np.save('./processed_data/replicate_AVE/cutoffs.npy', np.array(cutoffs))
-np.save('./processed_data/replicate_AVE/test_probas.npy', np.array(test_probas))
-np.save('./processed_data/replicate_AVE/test_labels.npy', np.array(test_labels))
+
 

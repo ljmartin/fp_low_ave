@@ -6,7 +6,7 @@ import copy
 from pynndescent import NNDescent
 from sklearn.metrics import precision_score, recall_score, roc_auc_score, label_ranking_loss
 from sklearn.metrics import confusion_matrix, average_precision_score, label_ranking_average_precision_score
-
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import StandardScaler
 
@@ -35,7 +35,111 @@ def get_subset(x, y, indices):
     y_ = y_[row_mask]
     x_ = x[row_mask]
     return x_, y_
+
+
+
+
+
+def split_clusters(pos_labels, neg_labels, pos_test_fraction, neg_test_fraction, shuffle=True):
+    if shuffle:
+        #Shuffle so we can do random selection of clusters:
+        np.random.shuffle(pos_labels)
+        np.random.shuffle(neg_labels)
+    #count number of clusters:
+    num_pos_clusters = len(pos_labels)
+    num_neg_clusters = len(neg_labels)
     
+    #get test and train positives:
+    test_pos_clusters = pos_labels[:max(1,int(num_pos_clusters*pos_test_fraction))]
+    train_pos_clusters = pos_labels[max(1,int(num_pos_clusters*pos_test_fraction)):]
+    
+    #get test and train negatives:
+    test_neg_clusters = neg_labels[:int(num_neg_clusters*neg_test_fraction)]
+    train_neg_clusters = neg_labels[int(num_neg_clusters*(1-pos_test_fraction)):]
+    
+    #combined:
+    test_clusters = list(test_pos_clusters)+list(test_neg_clusters)
+    train_clusters = list(train_pos_clusters)+list(train_neg_clusters)
+    
+    return test_clusters, train_clusters
+
+def _split_indices(y_, idx, clusterer, test_clusters, train_clusters):
+    alltest = np.isin(clusterer.labels_, test_clusters)
+    alltrain = np.isin(clusterer.labels_, train_clusters)
+    allpos = y_[:,idx].astype(bool)
+    allneg = ~allpos
+    return alltest, alltrain, allpos, allneg
+
+def get_four_matrices(y_, idx, clusterer, test_clusters, train_clusters):
+    alltest, alltrain, allpos, allneg = _split_indices(y_, idx, clusterer, test_clusters, train_clusters)
+    actives_test_indices = (alltest&allpos).nonzero()[0]
+    actives_train_indices = (alltrain&allpos).nonzero()[0]
+    inactives_test_indices = (alltest&allneg).nonzero()[0]
+    inactives_train_indices = (alltrain&allneg).nonzero()[0]
+    return actives_test_indices, actives_train_indices, inactives_test_indices, inactives_train_indices
+
+def calc_AVE_quick(dmat, actives_train, actives_test, inactives_train, inactives_test):
+    inactive_dmat = dmat[inactives_test]
+    iTest_iTrain_D = inactive_dmat[:,inactives_train].min(1)
+    iTest_aTrain_D = inactive_dmat[:,actives_train].min(1)
+    
+    active_dmat = dmat[actives_test]
+    aTest_aTrain_D = active_dmat[:,actives_train].min(1)
+    aTest_iTrain_D = active_dmat[:,inactives_train].min(1)
+
+    aTest_aTrain_S = np.mean( [ np.mean( aTest_aTrain_D < t ) for t in np.linspace( 0, 1.0, 50 ) ] )
+    aTest_iTrain_S = np.mean( [ np.mean( aTest_iTrain_D < t ) for t in np.linspace( 0, 1.0, 50 ) ] )
+    iTest_iTrain_S = np.mean( [ np.mean( iTest_iTrain_D < t ) for t in np.linspace( 0, 1.0, 50 ) ] )
+    iTest_aTrain_S = np.mean( [ np.mean( iTest_aTrain_D < t ) for t in np.linspace( 0, 1.0, 50 ) ] )
+    
+    ave = aTest_aTrain_S-aTest_iTrain_S+iTest_iTrain_S-iTest_aTrain_S
+    return ave
+
+
+def trim(dmat, train_indices, test_indices, fraction_to_trim):
+    num_to_trim = int(len(train_indices)*fraction_to_trim)
+    new_indices = train_indices[dmat[:,train_indices].min(0).argsort()[num_to_trim:]]
+    return new_indices
+
+
+def evaluate_split(x, y, idx, pos_train, pos_test, neg_train, neg_test, auroc=False, ap=True):
+    all_train = np.concatenate([pos_train, neg_train])
+    all_test = np.concatenate([pos_test, neg_test])
+    x_train = x[all_train]
+    x_test = x[all_test]
+    y_train = y[all_train][:,idx]
+    y_test = y[all_test][:,idx]
+    
+    clf = LogisticRegression(solver='lbfgs', max_iter=500)
+    clf.fit(x_train, y_train)
+    probas = clf.predict_proba(x_test)[:,1]
+
+    results = {}
+    if auroc:
+        score = roc_auc_score(y_test, probas)
+        results['auroc']=score
+    if ap:
+        score = average_precision_score(y_test, probas)
+        results['ap']=score
+    return results
+
+
+
+
+
+###############################
+##--------------------------###
+###############################
+
+
+
+
+
+
+
+
+
+
 
 def merge_feature_matrices(matrices):
     """Merges four feature matrices into two matrices (test/train) for subsequent
