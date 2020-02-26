@@ -87,6 +87,13 @@ def split_feature_matrices(x_train, x_test, y_train, y_test, idx):
 
 
 ##The following performs test/train splitting by single-linkage clustering:
+def get_split_indices(y_, idx, clusterer, test_clusters, train_clusters):
+    alltest = np.isin(clusterer.labels_, test_clusters)
+    alltrain = np.isin(clusterer.labels_, train_clusters)
+    allpos = y_[:,idx].astype(bool)
+    allneg = ~allpos
+    return alltest, alltrain, allpos, allneg
+
 def make_cluster_split(x_, y_, clust, percentage_holdout=0.2, test_clusters=False):
     """Given a X,Y, and a fitted clusterer from sklearn, this selects
     a percentage of clusters as holdout clusters, then constructs the X,Y matrices
