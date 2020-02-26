@@ -46,7 +46,7 @@ cutoffs = list()
 aves = list()
 sizes = list()
 
-for _ in tqdm(range(100)):
+for _ in tqdm(range(30)):
     #choose a random target:
     idx = np.random.choice(y_.shape[1])
 
@@ -94,10 +94,10 @@ for _ in tqdm(range(100)):
     aTest_aTrain_D = actives[:,actives_train_indices].min(1)
     aTest_iTrain_D = actives[:,new_inactives_train_indices].min(1)
 
-    aTest_aTrain_S = np.mean( [ np.mean( np.any( aTest_aTrain_D < t, axis=0 ) ) for t in np.linspace( 0, 1.0, 50 ) ] )
-    aTest_iTrain_S = np.mean( [ np.mean( np.any( aTest_iTrain_D < t, axis=0 ) ) for t in np.linspace( 0, 1.0, 50 ) ] )
-    iTest_iTrain_S = np.mean( [ np.mean( np.any( iTest_iTrain_D < t, axis=0 ) ) for t in np.linspace( 0, 1.0, 50 ) ] )
-    iTest_aTrain_S = np.mean( [ np.mean( np.any( iTest_aTrain_D < t, axis=0 ) ) for t in np.linspace( 0, 1.0, 50 ) ] )
+    aTest_aTrain_S = np.mean( [ np.mean( aTest_aTrain_D < t ) for t in np.linspace( 0, 1.0, 50 ) ] )
+    aTest_iTrain_S = np.mean( [ np.mean( aTest_iTrain_D < t ) for t in np.linspace( 0, 1.0, 50 ) ] )
+    iTest_iTrain_S = np.mean( [ np.mean( iTest_iTrain_D < t ) for t in np.linspace( 0, 1.0, 50 ) ] )
+    iTest_aTrain_S = np.mean( [ np.mean( iTest_aTrain_D < t ) for t in np.linspace( 0, 1.0, 50 ) ] )
 
     ave = aTest_aTrain_S-aTest_iTrain_S+iTest_iTrain_S-iTest_aTrain_S
     
