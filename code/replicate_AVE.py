@@ -30,15 +30,6 @@ x_, y_ = utils.get_subset(x, y, indices=col_indices)
 distance_matrix = utils.fast_dice(x_)
 
 
-print('')
-print('The below:')
-print('- chooses a distance threshold in a reasonable range (from the distribution ~ U(low=0.05, high=0.425))')
-print('- clusters the dataset using single-linkage agglomerative clustering')
-print('- generates a train/test split based on random assignment of clusters and a randomly selected target,')
-print('- calculates AVE bias for that split,')
-print('- and makes probability predictions for the test set based on a logistic regression classifier.')
-print('')
-
 
 #These will be used to save all the data so we don't have to repeatedly run this script
 targets = list()
@@ -59,7 +50,7 @@ for _ in tqdm(range(300)):
     idx = np.random.choice(y_.shape[1])
 
     #choose a random clustering cutoff and cluster:
-    cutoff = stats.uniform(0.05, 0.7).rvs()
+    cutoff = stats.uniform(0.05, 0.425).rvs()
     clusterer = AgglomerativeClustering(n_clusters=None, distance_threshold=cutoff, linkage='single', affinity='precomputed')
     clusterer.fit(distance_matrix)
 
@@ -67,7 +58,7 @@ for _ in tqdm(range(300)):
     pos_labels = np.unique(clusterer.labels_[y_[:,idx]==1])
     neg_labels = clabels[~np.isin(clabels, pos_labels)]
     if min(len(pos_labels), len(neg_labels))<2:
-        print('Not enough positive clusters to split')
+        #print('Not enough positive clusters to split')
         continue
     
     test_clusters, train_clusters = utils.split_clusters(pos_labels, neg_labels, 0.2, 0.2, shuffle=True)
@@ -76,8 +67,8 @@ for _ in tqdm(range(300)):
     print(actives_test_idx.shape[0], actives_train_idx.shape[0], inactives_test_idx.shape[0], inactives_train_idx.shape[0])
     print(min([actives_test_idx.shape[0], actives_train_idx.shape[0], inactives_test_idx.shape[0], inactives_train_idx.shape[0]]))        
     if min([actives_test_idx.shape[0], actives_train_idx.shape[0], inactives_test_idx.shape[0], inactives_train_idx.shape[0]])<20:        
-           print('Not enough ligands to train and test')
-           continue
+        #print('Not enough ligands to train and test')
+        continue
     ave= utils.calc_AVE_quick(distance_matrix, actives_train_idx, actives_test_idx,inactives_train_idx, inactives_test_idx)
     aves_before_trim.append(ave)
 
@@ -89,14 +80,14 @@ for _ in tqdm(range(300)):
     new_inactives_train_idx = utils.trim(inactive_dmat, 
                                        inactives_train_idx, 
                                        inactives_test_idx,
-                                             fraction_to_trim=0.2)
+                                             fraction_to_trim=0.3)
     #then trim from the actives/train matrix:
     active_dmat = distance_matrix[actives_test_idx]
     print('New actives train_idx', active_dmat.shape, actives_train_idx.shape, actives_test_idx.shape)
     new_actives_train_idx = utils.trim(active_dmat,
                                     actives_train_idx, 
                                     actives_test_idx,
-                                     fraction_to_trim=0.2)
+                                       fraction_to_trim=0.3)
 
     #now calculate AVE with this new split:
     ave= utils.calc_AVE_quick(distance_matrix, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx)

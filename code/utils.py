@@ -40,6 +40,7 @@ def get_subset(x, y, indices):
 
 
 
+
 def split_clusters(pos_labels, neg_labels, pos_test_fraction, neg_test_fraction, shuffle=True):
     if shuffle:
         #Shuffle so we can do random selection of clusters:
@@ -52,10 +53,15 @@ def split_clusters(pos_labels, neg_labels, pos_test_fraction, neg_test_fraction,
     #get test and train positives:
     test_pos_clusters = pos_labels[:max(1,int(num_pos_clusters*pos_test_fraction))]
     train_pos_clusters = pos_labels[max(1,int(num_pos_clusters*pos_test_fraction)):]
-    
-    #get test and train negatives:
-    test_neg_clusters = neg_labels[:int(num_neg_clusters*neg_test_fraction)]
-    train_neg_clusters = neg_labels[int(num_neg_clusters*(1-pos_test_fraction)):]
+
+    if isinstance(neg_test_fraction, float):
+        #get test and train negatives:
+        test_neg_clusters = neg_labels[:int(num_neg_clusters*neg_test_fraction)]
+        train_neg_clusters = neg_labels[int(num_neg_clusters*neg_test_fraction):]
+    else:
+        test_neg_clusters = neg_labels[:int(num_neg_clusters*neg_test_fraction[0])]
+        train_neg_clusters = neg_labels[-int(num_neg_clusters*neg_test_fraction[1]):]
+        
     
     #combined:
     test_clusters = list(test_pos_clusters)+list(test_neg_clusters)
