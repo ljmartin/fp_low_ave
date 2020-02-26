@@ -54,7 +54,7 @@ sizes_before_trim = list()
 sizes_after_trim = list()
 
 
-for _ in tqdm(range(2)):
+for _ in tqdm(range(300)):
     #choose a random target:
     idx = np.random.choice(y_.shape[1])
 
@@ -73,7 +73,11 @@ for _ in tqdm(range(2)):
     test_clusters, train_clusters = utils.split_clusters(pos_labels, neg_labels, 0.2, 0.2, shuffle=True)
 
     actives_test_idx, actives_train_idx, inactives_test_idx, inactives_train_idx = utils.get_four_matrices(y_,idx,clusterer,test_clusters,train_clusters)
-
+    print(actives_test_idx.shape[0], actives_train_idx.shape[0], inactives_test_idx.shape[0], inactives_train_idx.shape[0])
+    print(min([actives_test_idx.shape[0], actives_train_idx.shape[0], inactives_test_idx.shape[0], inactives_train_idx.shape[0]]))        
+    if min([actives_test_idx.shape[0], actives_train_idx.shape[0], inactives_test_idx.shape[0], inactives_train_idx.shape[0]])<20:        
+           print('Not enough ligands to train and test')
+           continue
     ave= utils.calc_AVE_quick(distance_matrix, actives_train_idx, actives_test_idx,inactives_train_idx, inactives_test_idx)
     aves_before_trim.append(ave)
 
@@ -81,13 +85,15 @@ for _ in tqdm(range(2)):
     #Now we will trim some nearest neighbours and by doing so, reduce AVE.
     #trim from the inactives/train matrix first:
     inactive_dmat = distance_matrix[inactives_test_idx]
+    print('New inactives train_idx', inactive_dmat.shape, inactives_train_idx.shape, inactives_test_idx.shape)
     new_inactives_train_idx = utils.trim(inactive_dmat, 
                                        inactives_train_idx, 
                                        inactives_test_idx,
                                              fraction_to_trim=0.2)
     #then trim from the actives/train matrix:
-    active_test_train_dmat = distance_matrix[actives_test_idx]
-    new_actives_train_idx = utils.trim(active_test_train_dmat,
+    active_dmat = distance_matrix[actives_test_idx]
+    print('New actives train_idx', active_dmat.shape, actives_train_idx.shape, actives_test_idx.shape)
+    new_actives_train_idx = utils.trim(active_dmat,
                                     actives_train_idx, 
                                     actives_test_idx,
                                      fraction_to_trim=0.2)
