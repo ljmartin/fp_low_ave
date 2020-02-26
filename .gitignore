@@ -11,3 +11,4 @@ morgan.npz
 pattern.npz
 rdk.npz
 topo_torsion.npz
+distMat.dat

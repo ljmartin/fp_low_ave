@@ -41,11 +41,13 @@ for fp in fp_names:
     test_n, test_d = nn_index.query(test_x.toarray())
 
     print('Calculating shared nearest neighbours:')
-    for test_neighbour in tqdm(test_n):
+    for test_neighbour, labels in tqdm(zip(test_n, test_y)):
+        label_columns = labels.nonzero()[0][0]
         distances = 1-np.array([(test_neighbour[:100]==train_neighbour[1:101])/100 for train_neighbour in train_n])
-        true_labels = train_y[:,train_y[idx].nonzero()[0][0]]
-        roc = np.cumsum(true_labels[distances.argsort()])/sum(true_labels)
-        scores.append(roc)
+        for col in label_columns:
+            true_labels = train_y[:,train_y[col].nonzero()[0][0]]
+            roc = np.cumsum(true_labels[distances.argsort()])/sum(true_labels)
+            scores.append(roc)
     scores = np.array(scores)
     low, high = sms.DescrStatsW(scores).tconfint_mean()
     np.save('./processed_data/snn/'+fp+'_roc.npy', scores.mean(0))
