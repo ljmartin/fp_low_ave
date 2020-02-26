@@ -29,9 +29,9 @@ cutoffs = np.load('processed_data/replicate_AVE/cutoffs.npy', allow_pickle=True)
 #sizes = np.load('processed_data/replicate_AVE/sizes.npy', allow_pickle=True)
 
 
-fig, ax = plt.subplots(1,2)
+fig, ax = plt.subplots(1,3)
 fig.set_figheight(4)
-fig.set_figwidth(10)
+fig.set_figwidth(15)
 plt.setp(ax, ylim=(-0.05,1.05))
 
 ax[0].scatter(aves_before_trim, auroc_before_trim, c=targets, alpha=utils.ALPHA)
@@ -44,11 +44,19 @@ ax[0].legend()
 ax[0].grid()
 utils.plot_fig_label(ax[0],'A.')
 
-ax[1].scatter(cutoffs, aves_before_trim, c=targets, alpha=utils.ALPHA)
+ax[1].scatter(cutoffs, ap_before_trim, c=targets, alpha=utils.ALPHA)
 ax[1].set_xlabel('AVE score')
 ax[1].set_ylabel('Average precision')
 ax[1].grid()
 utils.plot_fig_label(ax[1], 'B.')
+
+ax[2].scatter(cutoffs, ap_before_trim, alpha=utils.ALPHA, label='Before trim')
+ax[2].scatter(cutoffs, ap_after_trim,alpha=utils.ALPHA, label='After trim')
+ax[2].set_xlabel('AVE score')
+ax[2].set_ylabel('Average precision')
+ax[2].grid()
+ax[2].legend()
+utils.plot_fig_label(ax[1], 'C.')
 
 fig.savefig('./processed_data/replicate_AVE/auroc_vs_ap.png')
 plt.close(fig)
