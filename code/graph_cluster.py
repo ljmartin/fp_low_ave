@@ -19,9 +19,9 @@ col_indices = np.random.choice(243, 100, replace=False)
 x_, y_ = utils.get_subset(x, y, indices=col_indices)
 
 #Open a memory mapped distance matrix.
-#We do this because the pairwise distance matrix for 100 targets does not fix in memory!
+#We do this because the pairwise distance matrix for 100 targets does not fit in memory.
 #It is nearly 100% dense and has 117747*117747 = 13864356009 elements. This is also
-#Why it uses float16 (reducing storage space required to ~26GB).
+#Why it uses float16 (reducing the required storage space to ~26GB, c.f. 52GB for float32).
 distance_matrix = np.memmap('./processed_data/graph_fp_comparison/distMat.dat', dtype=np.float16,
               shape=(x_.shape[0], x_.shape[0]))
 
@@ -31,7 +31,7 @@ clusterer.buildAdjacency()
 clusterer.fit()
 
 
-#These will be used to save all the data so we don't have to repeatedly run this script
+#Store all the results in these:
 aves_before_trim = list()
 aves_after_trim = list()
 ap_before_trim = list()
@@ -42,11 +42,11 @@ cutoffs = list()
 aves = list()
 sizes = list()
 
-for _ in tqdm(range(2)):
+for _ in tqdm(range(300)):
     #choose a random target:
     idx = np.random.choice(y_.shape[1])
 
-    #choose a random clustering cutoff and cluster:
+    #choose a random cluster size upper limit and cluster:
     clusterSize = np.random.randint(200,10000)
     clusterer.balanced_cut(clusterSize)
 
@@ -98,8 +98,8 @@ for _ in tqdm(range(2)):
     results = utils.evaluate_split(x_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True)
     ap_after_trim.append(results['ap'])
     
-    cutoffs.append(cutoff)
-#    sizes.append([i.shape[0] for i in matrices])
+    cutoffs.append(clusterSize)
+    sizes_after_trim.append([new_actives_train_idx.shape[0], actives_test_idx.shape[0], new_inactives_train_idx.shape[0], inactives_test_idx.shape[0]])
     targets.append(idx)
 
 ##Save all the AVEs and model prediction data:
@@ -107,7 +107,7 @@ np.save('./processed_data/graph_cluster/aves_before_trim.npy', np.array(aves_bef
 np.save('./processed_data/graph_cluster/aves_after_trim.npy', np.array(aves_after_trim))
 np.save('./processed_data/graph_cluster/ap_before_trim.npy', np.array(ap_before_trim))
 np.save('./processed_data/graph_cluster/ap_after_trim.npy', np.array(ap_after_trim))
-#np.save('./processed_data/graph_cluster/sizes.npy', np.array(sizes))
+np.save('./processed_data/graph_cluster/sizes.npy', np.array(sizes))
 np.save('./processed_data/graph_cluster/targets.npy', np.array(targets))
 np.save('./processed_data/graph_cluster/cutoffs.npy', np.array(cutoffs))
 
