@@ -14,43 +14,22 @@ from tqdm import tqdm
 
 ##Set plotting parameters:
 utils.set_mpl_params()
-fp_names = utils.getNames()
+fp_names = utils.getNames(short=True)
 
-fp_probas = dict()
-fp_average_precisions = dict()
+
+fp_aps = dict()
 for fp in fp_names:
-    fp_probas[fp] = np.load('./processed_data/graph_fp_comparison/'+fp+'_probas.npy', allow_pickle=True)
-    fp_average_precisions[fp] = []
+    fp_aps[fp] = np.load('./processed_data/graph_fp_comparison/ap_'+fp+'.npy', allow_pickle=True)
 
-test_labels = np.load('processed_data/graph_fp_comparison/test_labels.npy', allow_pickle=True)
 aves = np.load('processed_data/graph_fp_comparison/aves.npy', allow_pickle=True)
 targets = np.load('processed_data/graph_fp_comparison/targets.npy', allow_pickle=True)
 cutoffs = np.load('processed_data/graph_fp_comparison/cutoffs.npy', allow_pickle=True)
 sizes = np.load('processed_data/graph_fp_comparison/sizes.npy', allow_pickle=True)
 
 
-average_precisions = list()
-
-for fp in fp_names:
-    test_probas = fp_probas[fp]
-    for probas, y_test in tqdm(zip(test_probas, test_labels)):
-        average_precision = average_precision_score(y_test, probas)    
-        fp_average_precisions[fp].append(average_precision)
-
-
-for fp in fp_names:
-
-    fig, ax = plt.subplots(1)
-    ax.scatter(aves, fp_average_precisions[fp], c=targets, alpha=utils.ALPHA)
-    ax.set_xlabel('AVE score')
-    ax.set_ylabel('AP')
-    ax.grid()    
-    fig.savefig('./processed_data/graph_fp_comparison/ap_'+fp+'.png')
-    plt.close(fig)
-
 fig, ax = plt.subplots(1)
 for fp in fp_names:
-    ax.scatter(np.array(aves)+np.random.uniform(-0.01,0.01, len(aves)), fp_average_precisions[fp], s=25, alpha=utils.ALPHA, label=fp)
+    ax.scatter(np.array(aves)+np.random.uniform(-0.01,0.01, len(aves)), fp_aps[fp], s=25, alpha=utils.ALPHA, label=fp)
 
     
 ax.set_xlabel('AVE score')
@@ -81,7 +60,7 @@ for fp in fp_names:
         linestyle='--'
     else:
         linestyle='-'
-    score = np.array(fp_average_precisions[fp])
+    score = np.array(fp_aps[fp])
     x_points = np.array(aves)
     #outlier mask:
     mask = score<0.99999

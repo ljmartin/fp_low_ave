@@ -36,7 +36,8 @@ clusterer.fit()
 #Fingerprints to be compared:
 fp_names = utils.getNames()
 fp_dict = {} #this stores the actual fingerprint feature matrices
-fp_ap = {} #this stores the average precisions
+fp_ap_before_trim = {} #this stores the average precisions
+fp_ap_after_trim = {} #this stores the average precisions
 
 #Load up the dictionaries with the relevant feature matrices for each fingerprint:
 for fp in fp_names:
@@ -44,16 +45,19 @@ for fp in fp_names:
     featureMatrix, labels = utils.load_feature_and_label_matrices(type=fp)
     featureMatrix_, labels__ = utils.get_subset(featureMatrix, y, indices=col_indices)
     fp_dict[fp]=sparse.csr_matrix(featureMatrix_)
-    fp_ap[fp] = []
+    fp_ap_before_trim[fp] = []
+    fp_ap_after_trim[fp] = []
 
 
 #Store all the results in these:
 targets = list()
 cutoffs = list()
-aves = list()
-sizes = list()
+aves_before_trim = list()
+aves_after_trim = list()
+sizes_before_trim = list()
+sizes_after_trim = list()
 
-for _ in tqdm(range(2)):
+for _ in tqdm(range(300)):
     #choose a random target:
     idx = np.random.choice(y_.shape[1])
 
@@ -71,14 +75,21 @@ for _ in tqdm(range(2)):
     test_clusters, train_clusters = utils.split_clusters(pos_labels, neg_labels, 0.2, [0.1,0.1], shuffle=True)
 
     actives_test_idx, actives_train_idx, inactives_test_idx, inactives_train_idx = utils.get_four_matrices(y_,idx,clusterer,test_clusters,train_clusters)
-    print(actives_test_idx.shape[0], actives_train_idx.shape[0], inactives_test_idx.shape[0], inactives_train_idx.shape[0])
-    print(min([actives_test_idx.shape[0], actives_train_idx.shape[0], inactives_test_idx.shape[0], inactives_train_idx.shape[0]]))        
     if min([actives_test_idx.shape[0], actives_train_idx.shape[0], inactives_test_idx.shape[0], inactives_train_idx.shape[0]])<20:        
            print('Not enough ligands to train and test')
            continue
-    #No need to calculate the AVE beforehand this time.
-    #ave= utils.calc_AVE_quick(distance_matrix, actives_train_idx, actives_test_idx,inactives_train_idx, inactives_test_idx)
-    #aves_before_trim.append(ave)
+    
+    ave = utils.calc_AVE_quick(distance_matrix, actives_train_idx, actives_test_idx,inactives_train_idx, inactives_test_idx)
+    aves_before_trim.append(ave)
+    sizes_before_trim.append([actives_train_idx.shape[0], actives_test_idx.shape[0], inactives_train_idx.shape[0], inactives_test_idx.shape[0]])
+    print('Fitting...')
+    for fp in fp_names:
+        print(fp, end=' ')
+        results = utils.evaluate_split(fp_dict[fp], y_, idx, actives_train_idx, actives_test_idx, inactives_train_idx, inactives_test_idx, auroc=False, ap=True)
+        fp_ap_before_trim[fp].append(results['ap'])
+    print('Done')
+
+
     
     #Now we will trim some nearest neighbours and by doing so, reduce AVE.
     #trim from the inactives/train matrix first:
@@ -97,21 +108,28 @@ for _ in tqdm(range(2)):
                                      fraction_to_trim=0.2)
 
     #now calculate AVE with this new split:
-    ave= utils.calc_AVE_quick(distance_matrix, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx)
+    ave = utils.calc_AVE_quick(distance_matrix, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx)
     aves_after_trim.append(ave)
+    sizes_after_trim.append([new_actives_train_idx.shape[0], actives_test_idx.shape[0], new_inactives_train_idx.shape[0], inactives_test_idx.shape[0]])
 
     print('Fitting...')
     for fp in fp_names:
+        print(fp, end=' ')
         results = utils.evaluate_split(fp_dict[fp], y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True)
-        fp_ap[fp].append(results['ap'])
+        fp_ap_after_trim[fp].append(results['ap'])
     print('Done')
 
     cutoffs.append(clusterSize)
     targets.append(idx)
-    sizes.append([new_actives_train_idx.shape[0], actives_test_idx.shape[0], new_inactives_train_idx.shape[0], inactives_test_idx.shape[0]])
+
 
 ##Save all the AVEs and model prediction data:
-np.save('./processed_data/graph_fp_comparison/aves.npy', np.array(aves))
-np.save('./processed_data/graph_fp_comparison/sizes.npy', np.array(sizes))
+np.save('./processed_data/graph_fp_comparison/aves_before_trim.npy', np.array(aves_before_trim))
+np.save('./processed_data/graph_fp_comparison/aves_after_trim.npy', np.array(aves_after_trim))
+np.save('./processed_data/graph_fp_comparison/sizes_before_trim.npy', np.array(sizes_before_trim))
+np.save('./processed_data/graph_fp_comparison/sizes_after_trim.npy', np.array(sizes_after_trim))
 np.save('./processed_data/graph_fp_comparison/targets.npy', np.array(targets))
 np.save('./processed_data/graph_fp_comparison/cutoffs.npy', np.array(cutoffs))
+for fp in fp_names:
+    np.save('./processed_data/graph_fp_comparison/ap_before_'+fp+'.npy', np.array(fp_ap_before_trim[fp]))
+    np.save('./processed_data/graph_fp_comparison/ap_after_'+fp+'.npy', np.array(fp_ap_after_trim[fp]))

@@ -59,9 +59,9 @@ plt.close(fig)
 
 
 
-fig, ax = plt.subplots(1,2)
+fig, ax = plt.subplots(1,3)
 fig.set_figheight(6)
-fig.set_figwidth(12)
+fig.set_figwidth(18)
 
 ax[0].scatter(cutoffs, aves_before_trim, alpha=utils.ALPHA, label='Before trim')
 ax[0].scatter(cutoffs, aves_after_trim, alpha=utils.ALPHA, label='After trim')
@@ -77,6 +77,15 @@ ax[1].set_xlabel('AVE before trimming')
 ax[1].set_ylabel('AVE after trimming')
 ax[1].grid()
 utils.plot_fig_label(ax[1], 'B.')
+
+ax[2].scatter(aves_before_trim, ap_before_trim, alpha=utils.ALPHA, label='Before trim')
+ax[2].scatter(aves_after_trim, ap_after_trim, alpha=utils.ALPHA, label='After trim')
+ax[2].legend()
+ax[2].set_xlabel('AVE')
+ax[2].set_ylabel('AP')
+ax[2].grid()
+utils.plot_fig_label(ax[2], 'C.')
+
 
 fig.savefig('./processed_data/replicate_AVE/trim.png')
 
@@ -103,5 +112,6 @@ kdeplot( np.log10(sizes_after_trim[:,[0,1]].sum(1) / sizes_after_trim[:,[2,3]].s
 ax[1].set_xlabel('Log$_10$(Test size / Train size)')
 ax[1].set_ylabel('Density')
 utils.plot_fig_label(ax[1], 'B')
+
 
 fig.savefig('./processed_data/replicate_AVE/sizes.png')

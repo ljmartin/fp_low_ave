@@ -15,8 +15,11 @@ import matplotlib.pyplot as plt
 def getSeed(seed=500):
     return seed
 
-def getNames():
-    return ['morgan', '2dpharm', 'atom_pair', 'erg', 'cats', 'layered', 'maccs', 'morgan_feat', 'pattern', 'rdk', 'topo_torsion']
+def getNames(short=False):
+    if short:
+        return ['morgan', 'cats', 'erg', 'rdk']
+    else:
+        return ['morgan', '2dpharm', 'atom_pair', 'erg', 'cats', 'layered', 'maccs', 'morgan_feat', 'pattern', 'rdk', 'topo_torsion']
 
 def load_feature_and_label_matrices(type='morgan'):
     y = sparse.load_npz('./raw_data/y.npz').toarray()
@@ -51,18 +54,19 @@ def split_clusters(pos_labels, neg_labels, pos_test_fraction, neg_test_fraction,
     num_neg_clusters = len(neg_labels)
     
     #get test and train positives:
-    test_pos_clusters = pos_labels[:max(1,int(num_pos_clusters*pos_test_fraction))]
-    train_pos_clusters = pos_labels[max(1,int(num_pos_clusters*pos_test_fraction)):]
+    test_pos_clusters = pos_labels[:max(1,round(num_pos_clusters*pos_test_fraction))]
+    train_pos_clusters = pos_labels[max(1,round(num_pos_clusters*pos_test_fraction)):]
 
     if isinstance(neg_test_fraction, float):
         #get test and train negatives:
         test_neg_clusters = neg_labels[:int(num_neg_clusters*neg_test_fraction)]
         train_neg_clusters = neg_labels[int(num_neg_clusters*neg_test_fraction):]
     else:
-        test_neg_clusters = neg_labels[:int(num_neg_clusters*neg_test_fraction[0])]
-        train_neg_clusters = neg_labels[-int(num_neg_clusters*neg_test_fraction[1]):]
-        
-    
+        if sum(neg_test_fraction)>1:
+            raise ValueError('Sum of test proportion and train proportion must be less than 1')
+        test_neg_clusters = neg_labels[:round(num_neg_clusters*neg_test_fraction[0])]
+        train_neg_clusters = neg_labels[-round(num_neg_clusters*neg_test_fraction[1]):]
+            
     #combined:
     test_clusters = list(test_pos_clusters)+list(test_neg_clusters)
     train_clusters = list(train_pos_clusters)+list(train_neg_clusters)
@@ -108,7 +112,7 @@ def trim(dmat, train_indices, test_indices, fraction_to_trim):
     return new_indices
 
 
-def evaluate_split(x, y, idx, pos_train, pos_test, neg_train, neg_test, auroc=False, ap=True):
+def evaluate_split(x, y, idx, pos_train, pos_test, neg_train, neg_test, auroc=False, ap=True, weight=None):
     all_train = np.concatenate([pos_train, neg_train])
     all_test = np.concatenate([pos_test, neg_test])
     x_train = x[all_train]
@@ -116,7 +120,7 @@ def evaluate_split(x, y, idx, pos_train, pos_test, neg_train, neg_test, auroc=Fa
     y_train = y[all_train][:,idx]
     y_test = y[all_test][:,idx]
     
-    clf = LogisticRegression(solver='lbfgs', max_iter=500)
+    clf = LogisticRegression(solver='lbfgs', max_iter=1000, class_weight=weight)
     clf.fit(x_train, y_train)
     probas = clf.predict_proba(x_test)[:,1]
 

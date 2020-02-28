@@ -36,13 +36,16 @@ aves_before_trim = list()
 aves_after_trim = list()
 ap_before_trim = list()
 ap_after_trim = list()
+sizes_before_trim = list()
+sizes_after_trim = list()
+
 
 targets = list()
 cutoffs = list()
 aves = list()
 sizes = list()
 
-for _ in tqdm(range(300)):
+for _ in tqdm(range(400)):
     #choose a random target:
     idx = np.random.choice(y_.shape[1])
 
@@ -67,7 +70,8 @@ for _ in tqdm(range(300)):
            continue
     ave= utils.calc_AVE_quick(distance_matrix, actives_train_idx, actives_test_idx,inactives_train_idx, inactives_test_idx)
     aves_before_trim.append(ave)
-
+    sizes_before_trim.append([actives_train_idx.shape[0], actives_test_idx.shape[0], inactives_train_idx.shape[0], inactives_test_idx.shape[0]])
+    
     #Now we will trim some nearest neighbours and by doing so, reduce AVE.
     #trim from the inactives/train matrix first:
     inactive_dmat = distance_matrix[inactives_test_idx]
