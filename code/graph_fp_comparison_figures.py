@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 ##Set plotting parameters:
 utils.set_mpl_params()
-fp_names = utils.getNames(short=True)
+fp_names = utils.getNames(short=False)
 
 
 fp_aps = dict()
@@ -73,7 +73,7 @@ for fp in fp_names:
             path_effects=pe1,
             alpha=0.5, linewidth=3, linestyle=linestyle)
     ax.scatter(x_points+np.random.uniform(-0.01, 0.01, len(x_points)), y_points, s=25, linewidth=0.4, alpha=utils.ALPHA)
-    print(fp, result.params[0])
+    print(fp, result.params[0], result.params[1])
 
 ax.set_xlabel('AVEs')
 ax.set_ylabel('Score')
