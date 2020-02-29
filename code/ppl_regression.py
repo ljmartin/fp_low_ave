@@ -17,43 +17,15 @@ utils.set_mpl_params()
 fp_names = utils.getNames(short=False)
 
 
-fp_aps_before = dict()
-fp_aps_after = dict()
+fp_aps = dict()
 for fp in fp_names:
-    fp_aps_before[fp] = np.load('./processed_data/graph_fp_comparison/ap_before_'+fp+'.npy', allow_pickle=True)
-    fp_aps_after[fp] = np.load('./processed_data/graph_fp_comparison/ap_after_'+fp+'.npy', allow_pickle=True)
- 
-aves_before_trim = np.load('processed_data/graph_fp_comparison/aves_before_trim.npy', allow_pickle=True)
-aves_after_trim = np.load('processed_data/graph_fp_comparison/aves_after_trim.npy', allow_pickle=True)
-sizes_before_trim = np.load('processed_data/graph_fp_comparison/sizes.npy', allow_pickle=True)
-sizes_after_trim = np.load('processed_data/graph_fp_comparison/sizes.npy', allow_pickle=True)
+    fp_aps[fp] = np.load('./processed_data/graph_fp_comparison/ap_'+fp+'.npy', allow_pickle=True)
+
+aves = np.load('processed_data/graph_fp_comparison/aves.npy', allow_pickle=True)
 targets = np.load('processed_data/graph_fp_comparison/targets.npy', allow_pickle=True)
 cutoffs = np.load('processed_data/graph_fp_comparison/cutoffs.npy', allow_pickle=True)
+sizes = np.load('processed_data/graph_fp_comparison/sizes.npy', allow_pickle=True)
 
-concat_av = np.concatenate([aves_before_trim, aves_after_trim])
-fig, ax = plt.subplots(1)
-for fp in fp_names:
-    concat_ap = np.concatenate([fp_aps_before[fp], fp_aps_after[fp]])
-    ax.scatter(concat_av+np.random.uniform(-0.01,0.01, len(concat_av)), concat_ap, s=25, alpha=utils.ALPHA, label=fp)
-    
-ax.set_xlabel('AVE score')
-ax.set_ylabel('AP')
-ax.grid()    
-ax.legend()
-fig.savefig('./processed_data/graph_fp_comparison/ap_all.png')
-plt.close(fig)
-
-
-
-fig, ax = plt.subplots()
-fig.set_figwidth(10)
-fig.set_figheight(8)
-xrange = np.linspace(np.min(concat_av), np.max(concat_av),10)
-def regress(x, y):
-    X = sm.add_constant(x[~np.isinf(y_points)])
-    model = sm.OLS(y_points[~np.isinf(y_points)],X)
-    result = model.fit()
-    return result
 
 pe1 = (mpe.Stroke(linewidth=1, foreground='black'),
        mpe.Stroke(foreground='white',alpha=1),
@@ -64,8 +36,8 @@ for fp in fp_names:
         linestyle='--'
     else:
         linestyle='-'
-    score = np.concatenate([fp_aps_before[fp], fp_aps_after[fp]])
-    x_points = np.array(concat_av)
+    score = np.array(fp_aps[fp])
+    x_points = np.array(aves)
     #outlier mask:
     mask = score<0.99999
     x_points = x_points[mask]
