@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as mpe
-
+import pymc3 as pm
 import utils
 
 from sklearn.metrics import precision_score, recall_score, roc_auc_score, label_ranking_average_precision_score
@@ -17,42 +17,44 @@ utils.set_mpl_params()
 fp_names = utils.getNames(short=False)
 
 
-fp_aps = dict()
+fp_aps_before = dict()
+fp_aps_after = dict()
 for fp in fp_names:
-    fp_aps[fp] = np.load('./processed_data/graph_fp_comparison/ap_'+fp+'.npy', allow_pickle=True)
-
-aves = np.load('processed_data/graph_fp_comparison/aves.npy', allow_pickle=True)
+    fp_aps_before[fp] = np.load('./processed_data/graph_fp_comparison/ap_before_'+fp+'.npy', allow_pickle=True)
+    fp_aps_after[fp] = np.load('./processed_data/graph_fp_comparison/ap_after_'+fp+'.npy', allow_pickle=True)
+ 
+aves_before_trim = np.load('processed_data/graph_fp_comparison/aves_before_trim.npy', allow_pickle=True)
+aves_after_trim = np.load('processed_data/graph_fp_comparison/aves_after_trim.npy', allow_pickle=True)
+sizes_before_trim = np.load('processed_data/graph_fp_comparison/sizes.npy', allow_pickle=True)
+sizes_after_trim = np.load('processed_data/graph_fp_comparison/sizes.npy', allow_pickle=True)
 targets = np.load('processed_data/graph_fp_comparison/targets.npy', allow_pickle=True)
 cutoffs = np.load('processed_data/graph_fp_comparison/cutoffs.npy', allow_pickle=True)
-sizes = np.load('processed_data/graph_fp_comparison/sizes.npy', allow_pickle=True)
 
+concat_av = np.concatenate([aves_before_trim, aves_after_trim])
 
-pe1 = (mpe.Stroke(linewidth=1, foreground='black'),
-       mpe.Stroke(foreground='white',alpha=1),
-       mpe.Normal())
 
 for fp in fp_names:
-    if fp in ['cats', 'erg', '2dpharm', 'morgan_feat', 'maccs']:
-        linestyle='--'
-    else:
-        linestyle='-'
-    score = np.array(fp_aps[fp])
-    x_points = np.array(aves)
+    score = np.concatenate([fp_aps_before[fp], fp_aps_after[fp]])
+    x_points = np.array(concat_av)
     #outlier mask:
-    mask = score<0.99999
+    mask = score<0.9999
     x_points = x_points[mask]
     score = score[mask]
     y_points = np.log10((score)/(1-score))
     result = regress(x_points, y_points)
-    ax.plot(xrange, result.params[0]+result.params[1]*xrange,
-            label=fp+' $R^2$: '+str(np.around(result.rsquared,3)),
-            path_effects=pe1,
-            alpha=0.5, linewidth=3, linestyle=linestyle)
-    ax.scatter(x_points+np.random.uniform(-0.01, 0.01, len(x_points)), y_points, s=25, linewidth=0.4, alpha=utils.ALPHA)
-    print(fp, result.params[0], result.params[1])
+    with pm.Model() as model: # model specifications in PyMC3 are wrapped in a with-statement
+        # Define priors
+        sigma = pm.HalfNormal('sigma', sigma=3)
+        intercept = pm.Normal('Intercept', 0, sigma=3)
+        x_coeff = pm.Normal('x', 0, sigma=3)
 
-ax.set_xlabel('AVEs')
-ax.set_ylabel('Score')
-ax.legend(loc=9, ncol=2)
-fig.savefig('./processed_data/graph_fp_comparison/regression.png')
-plt.close(fig)
+        # Define likelihood
+        likelihood = pm.Normal('y', mu=intercept + x_coeff * concat_av,
+                               sigma=sigma, observed=score)
+
+        # Inference!
+        trace = pm.sample(2000, cores=2)
+
+        print(pm.hpd(trace['Intercept']), pm.hpd(trace['x']))
+
+
