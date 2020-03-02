@@ -26,9 +26,9 @@ cutoffs = np.load('processed_data/graph_cluster/cutoffs.npy', allow_pickle=True)
 #sizes = np.load('processed_data/graph_cluster/sizes.npy', allow_pickle=True)
 
 
-fig, ax = plt.subplots(1,2)
-fig.set_figheight(6)
-fig.set_figwidth(12)
+fig, ax = plt.subplots(2,1)
+fig.set_figheight(8)
+fig.set_figwidth(5)
 
 kdeplot(aves_before_trim, ax=ax[0], label='Before trim')
 kdeplot(aves_after_trim, ax=ax[0], label='After trim')
