@@ -31,9 +31,9 @@ sizes_before_trim = np.load('processed_data/replicate_AVE/sizes_before_trim.npy'
 sizes_after_trim = np.load('processed_data/replicate_AVE/sizes_after_trim.npy', allow_pickle=True)
 
 
-fig, ax = plt.subplots(1,2)
-fig.set_figheight(6)
-fig.set_figwidth(12)
+fig, ax = plt.subplots(2,1)
+fig.set_figheight(8)
+fig.set_figwidth(5)
 plt.setp(ax, ylim=(-0.05,1.05))
 
 ax[0].scatter(aves_before_trim, auroc_before_trim, c=targets, alpha=utils.ALPHA)
