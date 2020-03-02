@@ -38,16 +38,14 @@ cutoffs = np.load('processed_data/graph_fp_comparison/cutoffs.npy', allow_pickle
 
 
 fig, ax = plt.subplots()
-kdeplot(aves_before_trim,ax=ax)
+kdeplot(aves_before_trim,ax=ax, label='Before trim')
 plt.scatter(aves_before_trim,
             np.zeros(aves_before_trim.shape[0])+np.random.uniform(-0.5, 0.5,aves_before_trim.shape[0]),
-            alpha=0.2,
-            label='Before trim')
-kdeplot(aves_after_trim, ax=ax)
+            alpha=0.2)
+kdeplot(aves_after_trim, ax=ax, label='After trim')
 ax.scatter(aves_after_trim,
             np.zeros(aves_after_trim.shape[0])+np.random.uniform(-0.5, 0.5,aves_after_trim.shape[0]),
-           alpha=0.2,
-           label='After trim')
+           alpha=0.2)
 ax.set_xlabel('AVE')
 ax.set_ylabel('Density')
 ax.grid()
