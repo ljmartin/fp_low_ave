@@ -51,6 +51,7 @@ ax.scatter(aves_after_trim,
 ax.set_xlabel('AVE')
 ax.set_ylabel('Density')
 ax.grid()
+ax.legend()
 fig.savefig('./processed_data/graph_fp_comparison/ave_distribution.png')
 
 
