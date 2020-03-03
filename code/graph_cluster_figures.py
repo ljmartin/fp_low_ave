@@ -8,8 +8,7 @@ import utils
 from sklearn.metrics import precision_score, recall_score, roc_auc_score, label_ranking_average_precision_score
 from sklearn.metrics import label_ranking_loss, confusion_matrix, average_precision_score, auc, precision_recall_curve
 
-import statsmodels.api as sm
-from statsmodels.distributions.empirical_distribution import ECDF
+from scipy.stats import norm
 
 from tqdm import tqdm
 
@@ -30,8 +29,11 @@ fig, ax = plt.subplots(2,1)
 fig.set_figheight(7.5)
 fig.set_figwidth(5.5)
 
-kdeplot(aves_before_trim, ax=ax[0], label='Before trim')
-kdeplot(aves_after_trim, ax=ax[0], label='After trim')
+mu_before, sigma_before = norm.fit(aves_before_trim)
+mu_after, sigma_after = norm.fit(aves_after_trim)
+
+kdeplot(aves_before_trim, ax=ax[0], label=f'Before trim, \nμ={np.around(mu_before,3)}, σ={np.around(sigma_before,3)}')
+kdeplot(aves_after_trim, ax=ax[0], label=f'After trim, \nμ={np.around(mu_after, 3)}, σ={np.around(sigma_after,3)}')
 ax[0].set_ylabel('Density')
 ax[0].set_xlabel('AVE')
 ax[0].grid()
@@ -39,6 +41,8 @@ ax[0].legend()
 utils.plot_fig_label(ax[0], 'A.')
 
 
+for a,b,c,d in zip(aves_before_trim, aves_after_trim, ap_before_trim, ap_after_trim):
+    ax[1].plot([a,b], [c,d], lw=0.2, c='k')
 ax[1].scatter(aves_before_trim, ap_before_trim, alpha=utils.ALPHA, label='Before trim')
 ax[1].scatter(aves_after_trim, ap_after_trim, alpha=utils.ALPHA, label='After trim')
 ax[1].set_xlabel('AVE')

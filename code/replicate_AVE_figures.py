@@ -72,8 +72,10 @@ ax[0].legend()
 utils.plot_fig_label(ax[0], 'A.')
 
 
+##If plotting lines joining before to after:
 for a,b,c,d in zip(aves_before_trim, aves_after_trim, ap_before_trim, ap_after_trim):
     ax[1].plot([a,b], [c,d], lw=0.2, c='k')
+#continue:
 ax[1].scatter(aves_before_trim, ap_before_trim, alpha=utils.ALPHA, label='Before trim')
 ax[1].scatter(aves_after_trim, ap_after_trim, alpha=utils.ALPHA, label='After trim')
 ax[1].legend()
