@@ -55,9 +55,6 @@ fig.savefig('./processed_data/graph_fp_comparison/ave_distribution.png')
 
 
 
-
-
-
 def pmc_mean(d):
     with pm.Model() as m:
         diff = pm.Normal('diff', 0, sigma=2)
@@ -68,6 +65,7 @@ def pmc_mean(d):
 
         trace = pm.sample(2000, cores=2) # draw 3000 posterior samples
         return trace
+
 
 
 
@@ -116,10 +114,71 @@ ax.legend(ncol=4, loc=3)
 ax.set_ylim(0.6,1.9)
 ax.set_ylabel('Relative average-precision')
 ax.set_xlabel('Fingerprint')
-ax.set_xticks([0,1,2,3,4,5,6,7,8,9,10], [])
+ax.set_xticks([0,1,2,3,4,5,6,7,8,9,10])
+ax.set_xticklabels([])
 ax.grid()
 
 fig.savefig('./processed_data/graph_fp_comparison/fp_comparison.png')
+
+
+
+
+###We repeat the above exactly except for using CATS as the reference group
+#(and changing the ylim):
+pm_diffs = dict()
+ctrl_fp = 'cats'
+control = fp_aps_after[ctrl_fp]
+
+for fp in fp_names:
+    score = fp_aps_after[fp]
+    if fp==ctrl_fp:
+        continue
+    else:
+        d = np.log10(score/control)
+        trace = pmc_mean(d)
+        pm_diffs[fp]=trace
+
+
+fig, ax = plt.subplots()
+fig.set_figheight(6)
+fig.set_figwidth(12)
+for count, fp in enumerate(fp_names):
+    if fp==ctrl_fp:
+        plt.errorbar(count, 1, yerr=0, label=fp, fmt='o', markersize=15, mfc='white')
+        continue
+    #coarse-grained fingerprints:
+    if fp in ['cats', 'erg', '2dpharm', 'morgan_feat', 'maccs']:
+        fm='d'
+        linestyle='--'
+    #high res fingerprints:
+    else:
+        fm = 'o'
+        linestyle='-'
+    tr = pm_diffs[fp]['diff']
+    hpd = pm.hpd(tr, credible_interval=0.99)
+    hpd = 10**hpd
+    y = 10**tr.mean()
+    eb = plt.errorbar(count, y, yerr=np.array([y-hpd[0], hpd[1]-y])[:,None], 
+                      label=fp, 
+                      fmt='o',
+                      linewidth=4,
+                     markersize=15, mfc='white', capsize=3)
+    eb[-1][0].set_linestyle(linestyle)
+
+ax.axhline(1, linestyle='-', c='k', zorder=0)
+ax.legend(ncol=4, loc=3)
+#ax.set_ylim(0.6,1.9)
+ax.set_ylabel('Relative average-precision')
+ax.set_xlabel('Fingerprint')
+ax.set_xticks([0,1,2,3,4,5,6,7,8,9,10])
+ax.set_xticklabels([])
+ax.grid()
+
+fig.savefig('./processed_data/supplementary/fp_comparison_cats.png')
+
+
+
+
 
 
 
