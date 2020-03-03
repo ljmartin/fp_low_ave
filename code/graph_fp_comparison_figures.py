@@ -101,7 +101,7 @@ for count, fp in enumerate(fp_names):
         fm = 'o'
         linestyle='-'
     tr = pm_diffs[fp]['diff']
-    hpd = pm.hpd(tr)
+    hpd = pm.hpd(tr, credible_interval=0.99)
     hpd = 10**hpd
     y = 10**tr.mean()
     eb = plt.errorbar(count, y, yerr=np.array([y-hpd[0], hpd[1]-y])[:,None], 
@@ -113,7 +113,7 @@ for count, fp in enumerate(fp_names):
 
 ax.axhline(1, linestyle='-', c='k', zorder=0)
 ax.legend(ncol=4, loc=3)
-ax.set_ylim(0.6,1.8)
+ax.set_ylim(0.6,1.9)
 ax.set_ylabel('Relative average-precision')
 ax.set_xlabel('Fingerprint')
 ax.set_xticks([0,1,2,3,4,5,6,7,8,9,10], [])
