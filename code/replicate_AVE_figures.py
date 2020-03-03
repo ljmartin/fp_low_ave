@@ -62,7 +62,6 @@ plt.close(fig)
 fig, ax = plt.subplots(2,1)
 fig.set_figheight(7.5)
 fig.set_figwidth(5.5)
-plt.setp(ax, ylim=(-0.2,1.05))
 
 ax[0].scatter(cutoffs, aves_before_trim, alpha=utils.ALPHA, label='Before trim')
 ax[0].scatter(cutoffs, aves_after_trim, alpha=utils.ALPHA, label='After trim')
@@ -72,17 +71,16 @@ ax[0].grid()
 ax[0].legend()
 utils.plot_fig_label(ax[0], 'A.')
 
-ax[1].scatter(aves_before_trim, aves_after_trim, c=targets, alpha=utils.ALPHA)
-ax[1].plot([0,1],[0,1])
-ax[1].scatter([0],[1.5], alpha=utils.ALPHA, c='C1', label='Target 1')
-ax[1].scatter([0],[1.5], alpha=utils.ALPHA, c='C2', label='Target 2')
-ax[1].scatter([0],[1.5], alpha=utils.ALPHA, c='C3', label='etc...')
-ax[1].set_xlabel('AVE before trimming')
-ax[1].set_ylabel('AVE after trimming')
-ax[1].grid()
-ax[1].legend()
-utils.plot_fig_label(ax[1], 'B.')
 
+for a,b,c,d in zip(aves_before_trim, aves_after_trim, ap_before_trim, ap_after_trim):
+    ax[1].plot([a,b], [c,d], lw=0.2, c='k')
+ax[1].scatter(aves_before_trim, ap_before_trim, alpha=utils.ALPHA, label='Before trim')
+ax[1].scatter(aves_after_trim, ap_after_trim, alpha=utils.ALPHA, label='After trim')
+ax[1].legend()
+ax[1].set_xlabel('AVE')
+ax[1].set_ylabel('Average precision')
+ax[1].grid()
+utils.plot_fig_label(ax[1], 'B.')
 
 fig.savefig('./processed_data/replicate_AVE/trim.png')
 plt.close(fig)
@@ -90,17 +88,18 @@ plt.close(fig)
 
 fig, ax = plt.subplots()
 #This becomes a supplementary:
-for a,b,c,d in zip(aves_before_trim, aves_after_trim, ap_before_trim, ap_after_trim):
-    ax.plot([a,b], [c,d], lw=0.2, c='k')
-
-ax.scatter(aves_before_trim, ap_before_trim, alpha=utils.ALPHA, label='Before trim')
-ax.scatter(aves_after_trim, ap_after_trim, alpha=utils.ALPHA, label='After trim')
-ax.legend()
-ax.set_xlabel('AVE')
-ax.set_ylabel('Average precision')
+ax.scatter(aves_before_trim, aves_after_trim, c=targets, alpha=utils.ALPHA)
+ax.plot([0,1],[0,1])
+ax.scatter([0],[1.5], alpha=utils.ALPHA, c='C1', label='Target 1')
+ax.scatter([0],[1.5], alpha=utils.ALPHA, c='C2', label='Target 2')
+ax.scatter([0],[1.5], alpha=utils.ALPHA, c='C3', label='etc...')
+ax.set_xlabel('AVE before trimming')
+ax.set_ylabel('AVE after trimming')
 ax.grid()
+ax.set_ylim(-0.15, 1.05)
+ax.legend()
 
-fig.savefig('./processed_data/supplementary/replicate_AVE_vs_AP.png')
+fig.savefig('./processed_data/supplementary/trim_size.png')
 plt.close(fig)
 
 
