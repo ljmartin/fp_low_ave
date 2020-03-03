@@ -91,7 +91,7 @@ plt.close(fig)
 fig, ax = plt.subplots()
 #This becomes a supplementary:
 for a,b,c,d in zip(aves_before_trim, aves_after_trim, ap_before_trim, ap_after_trim):
-    ax.plot([a,b], [c,d], lw=0.5, c='k')
+    ax.plot([a,b], [c,d], lw=0.2, c='k')
 
 ax.scatter(aves_before_trim, ap_before_trim, alpha=utils.ALPHA, label='Before trim')
 ax.scatter(aves_after_trim, ap_after_trim, alpha=utils.ALPHA, label='After trim')
