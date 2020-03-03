@@ -94,7 +94,7 @@ ax.scatter(aves_before_trim, ap_before_trim, alpha=utils.ALPHA, label='Before tr
 ax.scatter(aves_after_trim, ap_after_trim, alpha=utils.ALPHA, label='After trim')
 ax.legend()
 ax.set_xlabel('AVE')
-ax.set_ylabel('AP')
+ax.set_ylabel('Average precision')
 ax.grid()
 fig.savefig('./processed_data/supplementary/replicate_AVE_vs_AP.png')
 plt.close(fig)
