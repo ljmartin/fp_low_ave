@@ -200,10 +200,15 @@ def do_bayes_regression(x,y):
 
 pm_traces = dict()
 
+#here we regress on the merged average precisions, i.e. before trimming AND after trimming,
+#to get more data.
+concat_ave = np.concatenate([aves_before_trim, aves_after_trim])
+
 for fp in fp_names:
-    #score = np.concatenate([fp_aps_before[fp], fp_aps_after[fp]])
-    score = fp_aps_after[fp]
-    x_points = np.array(aves_after_trim)
+    score = np.concatenate([fp_aps_before[fp], fp_aps_after[fp]])
+    #    score = fp_aps_after[fp]
+    #    x_points = np.array(aves_after_trim)
+    x_points = np.array(concat_ave)
     y_points = np.log10((score)/(1-score))
     trace = do_bayes_regression(x_points, y_points)
     pm_traces[fp]=trace
@@ -215,6 +220,7 @@ for fp in fp_names:
 fig, ax = plt.subplots(3, 1)
 fig.set_figheight(10)
 fig.set_figwidth(10)
+
 
 for count, fp in enumerate(fp_names):
     if fp in ['cats', 'erg', '2dpharm', 'morgan_feat', 'maccs']:
