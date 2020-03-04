@@ -51,7 +51,7 @@ ax.set_ylabel('Density')
 ax.grid()
 ax.legend()
 fig.savefig('./processed_data/graph_fp_comparison/ave_distribution.png')
-
+plt.close(fig)
 
 
 
@@ -119,7 +119,7 @@ ax.set_xticklabels([])
 ax.grid()
 
 fig.savefig('./processed_data/graph_fp_comparison/fp_comparison.png')
-
+plt.close(fig)
 
 
 
@@ -175,69 +175,140 @@ ax.set_xticklabels([])
 ax.grid()
 
 fig.savefig('./processed_data/supplementary/fp_comparison_cats.png')
+plt.close(fig)
 
 
 
 
+####Now we regress on AP vs AVE:
+def do_bayes_regression(x,y):
+    with pm.Model() as model: # model specifications in PyMC3 are wrapped in a with-statement
+        # Define priors
+        sigma = pm.HalfNormal('sigma', sigma=3)
+        intercept = pm.Normal('Intercept', 0, sigma=3)
+        x_coeff = pm.Normal('x', 0, sigma=3)
+
+        # Define likelihood
+        likelihood = pm.Normal('y', mu=intercept + x_coeff * x,
+                        sigma=sigma, observed=y)
+
+        # Inference!
+        trace = pm.sample(2000, cores=2) # draw 3000 posterior samples using NUTS 
+        return trace
 
 
 
-#####
-###For regression of AVE vs. average precision. 
-#####
+pm_traces = dict()
 
-
-#concat_av = np.concatenate([aves_before_trim, aves_after_trim])
-#fig, ax = plt.subplots(1)
-#for fp in fp_names:
-#    concat_ap = np.concatenate([fp_aps_before[fp], fp_aps_after[fp]])
-#    ax.scatter(concat_av+np.random.uniform(-0.01,0.01, len(concat_av)), concat_ap, s=25, alpha=utils.ALPHA, label=fp)
-#    
-#ax.set_xlabel('AVE score')
-#ax.set_ylabel('AP')
-#ax.grid()    
-#ax.legend()
-#fig.savefig('./processed_data/graph_fp_comparison/ap_all.png')
-#plt.close(fig)
+for fp in fp_names:
+    #score = np.concatenate([fp_aps_before[fp], fp_aps_after[fp]])
+    score = fp_aps_after[fp]
+    x_points = np.array(aves_after_trim)
+    y_points = np.log10((score)/(1-score))
+    trace = do_bayes_regression(x_points, y_points)
+    pm_traces[fp]=trace
 
 
 
-#fig, ax = plt.subplots()
+
+##Plot a three tier figure showing regressions:
+fig, ax = plt.subplots(3, 1)
+fig.set_figheight(10)
+fig.set_figwidth(10)
+
+for count, fp in enumerate(fp_names):
+    if fp in ['cats', 'erg', '2dpharm', 'morgan_feat', 'maccs']:
+        fm='d'
+        linestyle='--'                                                                                                                                                             
+    else:
+        fm = 'o'
+        linestyle='-'
+    tr = pm_traces[fp]['Intercept']
+    hpd = pm.hpd(tr,  credible_interval=0.99)
+    y = tr.mean()
+    eb = ax[0].errorbar(count, tr.mean(), yerr=np.array([hpd[0]-y, y-hpd[1]])[:,None], label=fp, fmt='o',
+                  linewidth=4, markersize=15, mfc='white', capsize=3)
+    eb[-1][0].set_linestyle(linestyle)
+    
+ax[0].set_ylabel('Intercept\n(higher is better)')
+ax[0].grid()
+ax[0].legend(ncol=4)
+ax[0].set_xticklabels([])
+
+for count, fp in enumerate(fp_names):
+    if fp in ['cats', 'erg', '2dpharm', 'morgan_feat', 'maccs']:
+        fm='d'
+        linestyle='--'                                                                                                                                                             
+    else:
+        fm = 'o'
+        linestyle='-'
+    tr = pm_traces[fp]['x']
+    hpd = pm.hpd(tr,  credible_interval=0.99)
+    y = tr.mean()
+    eb = ax[1].errorbar(count, tr.mean(), yerr=np.array([hpd[0]-y, y-hpd[1]])[:,None], label=fp, fmt='o',
+                  linewidth=4, markersize=15, mfc='white', capsize=3)
+    eb[-1][0].set_linestyle(linestyle)
+    
+ax[1].set_ylabel('Slope\n(lower is better)')
+ax[1].grid()
+ax[1].set_xticklabels([])
+
+def transform_y(y):
+    y = 10**y
+    return y / (1+y)
+
+xr = np.linspace(-0.2,0.5,100)
+
+for count, color, name in zip([0, 1], [0,4],['morgan', 'cats']):
+    intercept = pm_traces[name]['Intercept'].mean()
+    xcoef = pm_traces[name]['x'].mean()
+    y = xr*xcoef+intercept
+    y = transform_y(y)
+    ax[2].plot(xr, y, lw=2, label=name, c='C'+str(color))
+
+    ##This is showing the boundaries of epsilon (called sigma here for some reason):
+    y2 = transform_y(xr*xcoef+intercept-pm_traces[name]['sigma'].mean()*1.96)
+    y1 = transform_y(xr*xcoef+intercept+pm_traces[name]['sigma'].mean()*1.96)
+
+
+    ax[2].fill_between(xr, y1, y2, alpha=0.3, color='C'+str(color))
+    ax[2].legend()
+    ax[2].grid()
+    ax[2].axvline(0, linestyle='--', c='k', lw=1)
+
+ax[2].set_ylabel('Average precision')
+ax[2].set_xlabel('AVE')
+
+fig.savefig('./processed_data/graph_fp_comparison/regression_comparison.png')
+plt.close(fig)
+
+####First plot all the regressions to the supplementary:
+#def transform_y(y):
+#    y = 10**y
+#    return y / (1+y)
+#
+#xr = np.linspace(-0.2,0.5,100)
+#
+#fig, ax = plt.subplots(len(fp_names), 1)
+#fig.set_figheight(20)
 #fig.set_figwidth(10)
-#fig.set_figheight(8)
-#xrange = np.linspace(np.min(concat_av), np.max(concat_av),10)
-#def regress(x, y):
-#    X = sm.add_constant(x[~np.isinf(y_points)])
-#    model = sm.OLS(y_points[~np.isinf(y_points)],X)
-#    result = model.fit()
-#    return result
+#for count, name in enumerate(fp_names):
+#    intercept = pm_traces[name]['Intercept'].mean()
+#    xcoef = pm_traces[name]['x'].mean()
+#    y = xr*xcoef+intercept
+#    y = transform_y(y)
+#    ax[count].plot(xr, y, lw=2, label=name, c='C'+str(count))
 #
-#pe1 = (mpe.Stroke(linewidth=1, foreground='black'),
-#       mpe.Stroke(foreground='white',alpha=1),
-#       mpe.Normal())
+#    ##This is showing the boundaries of epsilon (called sigma here for some reason):
+#    y2 = transform_y(xr*xcoef+intercept-pm_traces[name]['sigma'].mean()*1.96)
+#    y1 = transform_y(xr*xcoef+intercept+pm_traces[name]['sigma'].mean()*1.96)
 #
-#for fp in fp_names:
-#    if fp in ['cats', 'erg', '2dpharm', 'morgan_feat', 'maccs']:
-#        linestyle='--'
-#    else:
-#        linestyle='-'
-#    score = np.concatenate([fp_aps_before[fp], fp_aps_after[fp]])
-#    x_points = np.array(concat_av)
-#    #outlier mask:
-#    mask = score<0.99999
-#    x_points = x_points[mask]
-#    score = score[mask]
-#    y_points = np.log10((score)/(1-score))
-#    result = regress(x_points, y_points)
-#    ax.plot(xrange, result.params[0]+result.params[1]*xrange,
-#            label=fp+' $R^2$: '+str(np.around(result.rsquared,3)),
-#            path_effects=pe1,
-#            alpha=0.5, linewidth=3, linestyle=linestyle)
-#    ax.scatter(x_points+np.random.uniform(-0.01, 0.01, len(x_points)), y_points, s=25, linewidth=0.4, alpha=utils.ALPHA)
-#    print(fp, result.params[0], result.params[1])
+#    ax[count].fill_between(xr, y1, y2, alpha=0.3, color='C'+str(count))
+#    ax[count].legend()
+#    ax[count].grid()
+#    ax[count].axvline(0, linestyle='--', c='k', lw=1)
 #
-#ax.set_xlabel('AVEs')
-#ax.set_ylabel('Score')
-#ax.legend(loc=9, ncol=2)
-#fig.savefig('./processed_data/graph_fp_comparison/regression.png')
+#fig.savefig('./processed_data/supplementary/all_regr_comparison.png')
 #plt.close(fig)
+
+
