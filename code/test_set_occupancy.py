@@ -70,8 +70,8 @@ for idx in range(10):
             neg_test_counts[i] +=1
 
 
-    pos_frac = np.array(list(pos_test_counts.values()))/30 * 100
-    neg_frac = np.array(list(neg_test_counts.values()))/30 * 100
+    pos_frac = np.array(list(pos_test_counts.values()))/30 
+    neg_frac = np.array(list(neg_test_counts.values()))/30 
     
     positive_fractions.append(pos_frac)
     negative_fractions.append(neg_frac)
@@ -97,7 +97,7 @@ for a,b in zip(positive_fractions, negative_fractions):
     count+=1
     
 ax.grid()
-ax.set_xlabel('% in test set')
+ax.set_xlabel('Fraction in test set')
 ax.set_ylabel('Density')
 ax.axvline(0.2, linestyle='--', c='k', label='Goal value')
 ax.legend()
