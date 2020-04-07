@@ -70,8 +70,8 @@ for idx in range(10):
             neg_test_counts[i] +=1
 
 
-    pos_frac = np.array(list(pos_test_counts.values()))/30
-    neg_frac = np.array(list(neg_test_counts.values()))/30
+    pos_frac = np.array(list(pos_test_counts.values()))/30 * 100
+    neg_frac = np.array(list(neg_test_counts.values()))/30 * 100
     
     positive_fractions.append(pos_frac)
     negative_fractions.append(neg_frac)

@@ -3,6 +3,7 @@ from scipy import sparse
 from scipy.spatial.distance import pdist, cdist, squareform
 import copy
 
+from pynndescent import NNDescent
 from sklearn.metrics import precision_score, recall_score, roc_auc_score, label_ranking_loss
 from sklearn.metrics import confusion_matrix, average_precision_score, label_ranking_average_precision_score
 from sklearn.linear_model import LogisticRegression
@@ -410,7 +411,4 @@ def set_mpl_params():
             "lines.linewidth": 3.0,
             "lines.markeredgewidth": 2.0,
             "lines.markerfacecolor": "none",
-            "lines.markersize": 8.0,
-        }
-
-    )
+            "lines.markersize": 8.
