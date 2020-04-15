@@ -45,7 +45,7 @@ sizes_before_trim = list()
 sizes_after_trim = list()
 
 
-for _ in tqdm(range(300)):
+for _ in tqdm(range(400)):
     #choose a random target:
     idx = np.random.choice(y_.shape[1])
 
@@ -77,13 +77,13 @@ for _ in tqdm(range(300)):
     new_inactives_train_idx = utils.trim(inactive_dmat, 
                                        inactives_train_idx, 
                                        inactives_test_idx,
-                                             fraction_to_trim=0.3)
+                                             fraction_to_trim=0.2)
     #then trim from the actives/train matrix:
     active_dmat = distance_matrix[actives_test_idx]
     new_actives_train_idx = utils.trim(active_dmat,
                                     actives_train_idx, 
                                     actives_test_idx,
-                                       fraction_to_trim=0.3)
+                                       fraction_to_trim=0.2)
 
     #now calculate AVE with this new split:
     ave= utils.calc_AVE_quick(distance_matrix, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx)
