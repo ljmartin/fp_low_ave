@@ -2,7 +2,7 @@ import numpy as np
 from scipy import sparse
 from pynndescent import NNDescent
 from sknetwork.hierarchy import Paris
-from sknetwork.hierarchy import straight_cut
+from sknetwork.hierarchy.postprocess import cut_straight
 
 from tqdm import tqdm
 
@@ -52,25 +52,3 @@ class ParisClusterer(object):
             labels[indices]=count
 
         self.labels_ = labels
-        
-#    def balancedCut(self, maxClusterSize):
-#        #self.labels_, _ = ward_cut_tree_balanced(self.paris.dendrogram_, clusterSize)
-#        dendrogram = self.paris.dendrogram_.copy()
-#        labels = np.zeros(len(dendrogram)+1).astype(int)-1
-#        mask = np.ones(len(dendrogram)+1).astype(bool)
-#        last_cluster_id = 0
-#        
-#        for n_clusters in range(1, len(dendrogram)+1):
-#            temp_labels = straight_cut(dendrogram, n_clusters=n_clusters)
-#            ids, counts = np.unique(temp_labels[mask], return_counts=True)
-#            if min(counts)<maxClusterSize: #do we at have at least one group being under the min cluster size?
-#                smaller_than_max = ids[counts<maxClusterSize] #if yes, then get those groups.
-#                for temp_id in smaller_than_max: #There might be multiple. For each group, set the 
-#                				 #instance labels to the queued cluster ID
-#                    labels[temp_labels==temp_id]=last_cluster_id
-#                    mask[temp_labels==temp_id]=False
-#                    last_cluster_id+=1
-#            if min(labels)!=-1:
-#                break
-#        self.labels_ = labels
-    
