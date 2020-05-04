@@ -21,6 +21,7 @@ If you want to create zero-AVE splits in your own work, you could use the code b
 import numpy as np
 from scipy.spatial.distance import cdist
 from paris_cluster import ParisClusterer
+import utils
 
 x = np.load('my_features.npy')
 y = np.load('my_labels.npy')
