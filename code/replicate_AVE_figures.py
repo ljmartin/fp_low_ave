@@ -53,6 +53,7 @@ ax[1].grid()
 utils.plot_fig_label(ax[1], 'B.')
 
 fig.savefig('./processed_data/replicate_AVE/auroc_vs_ap.png')
+fig.savefig('./processed_data/replicate_AVE/auroc_vs_ap.tif')
 plt.close(fig)
 
 
@@ -85,6 +86,7 @@ ax[1].grid()
 utils.plot_fig_label(ax[1], 'B.')
 
 fig.savefig('./processed_data/replicate_AVE/trim.png')
+fig.savefig('./processed_data/replicate_AVE/trim.tif')
 plt.close(fig)
 
 
@@ -102,6 +104,7 @@ ax.set_ylim(-0.15, 1.05)
 ax.legend()
 
 fig.savefig('./processed_data/supplementary/trim_size.png')
+fig.savefig('./processed_data/supplementary/trim_size.tif')
 plt.close(fig)
 
 
@@ -139,5 +142,6 @@ ax.legend()
 ax.grid()
 
 fig.savefig('./processed_data/supplementary/regression.png')
+fig.savefig('./processed_data/supplementary/regression.tif')
 plt.close(fig)
 

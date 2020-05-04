@@ -78,4 +78,5 @@ ax[2].set_xlabel('Number of instances compared')
 utils.plot_fig_label(ax[2], 'C.')
 
 fig.savefig('./processed_data/supplementary/time_comparison.png')
+fig.savefig('./processed_data/supplementary/time_comparison.tif')
 plt.close(fig)

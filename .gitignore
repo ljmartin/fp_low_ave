@@ -1,5 +1,7 @@
 *~
+*#
 *ipynb
+.DS_Store
 __pycache__/
 2dpharm.npz
 atom_pair.npz
@@ -12,3 +14,5 @@ pattern.npz
 rdk.npz
 topo_torsion.npz
 distMat.dat
+code/.DS_Store
+*.pyc

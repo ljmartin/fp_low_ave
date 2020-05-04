@@ -52,6 +52,7 @@ ax[1].grid()
 utils.plot_fig_label(ax[1], 'B.')
 
 fig.savefig('./processed_data/graph_cluster/trim.png')
+fig.savefig('./processed_data/graph_cluster/trim.tif')
 plt.close(fig)
 
 
