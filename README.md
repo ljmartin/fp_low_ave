@@ -65,6 +65,7 @@ new_actives_train_idx = utils.trim(active_dmat,
 
 
 
+Raise an issue in the tracker or drop a line to lewis dot martin at sydney edu au with any questions/issues. 
 
 
 
