@@ -47,11 +47,12 @@ new_inactives_train_idx = utils.trim(inactive_dmat,
                                        inactives_train_idx,
                                        inactives_test_idx,
                                    fraction_to_trim=0.2)
-                                             new_actives_train_idx = utils.trim(active_dmat,
+                                   
+new_actives_train_idx = utils.trim(active_dmat,
                                     actives_train_idx,
                                     actives_test_idx,
                                      fraction_to_trim=0.2)
-        
+                                     
 #now you have four sets of indices representing the split. 
 #i.e. 
 #actives_test_idx
