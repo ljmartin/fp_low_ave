@@ -1,7 +1,4 @@
 # fp_generalizability
-testing ability of different fingerprints to generalize to out-of-sample data
-
-
 
 Ligand based virtual screening is the use of machine learning for drug discovery. In 2018 it was demonstrated that the performance in many benchmarks was strongly correlated with bias in the train/test splits, and the authors also proposed a genetic algorithm to reduce bias (1). Subsequently, using the genetic algorithm, it was shown (by others) that the _de facto_ standard featurization (i.e. ECFP a.k.a. Morgan fingerprints) performs poorly when the bias is low (2). We extend both results - we present an algorithm for fast (~1-2s) unbiased train/test splitting, which allows us to sample hundreds of splits quite quickly, and we use this to compare 11 different fingerprints. 
 
@@ -21,6 +18,7 @@ If you want to create zero-AVE splits in your own work, you could use the code b
 import numpy as np
 from scipy.spatial.distance import cdist
 from paris_cluster import ParisClusterer
+import utils
 
 x = np.load('my_features.npy')
 y = np.load('my_labels.npy')
@@ -49,11 +47,12 @@ new_inactives_train_idx = utils.trim(inactive_dmat,
                                        inactives_train_idx,
                                        inactives_test_idx,
                                    fraction_to_trim=0.2)
-                                             new_actives_train_idx = utils.trim(active_dmat,
+                                   
+new_actives_train_idx = utils.trim(active_dmat,
                                     actives_train_idx,
                                     actives_test_idx,
                                      fraction_to_trim=0.2)
-        
+                                     
 #now you have four sets of indices representing the split. 
 #i.e. 
 #actives_test_idx
