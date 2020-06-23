@@ -13,9 +13,9 @@ from scipy import sparse
 
 
 def makeMols(num=None):
-    smiles = pd.read_csv('./raw_data/allSmiles.csv', header=None)
+    smiles = pd.read_csv('./raw_data/all_chemicals.csv', header=0)
     mols = list()
-    for smile in smiles[0].iloc[0:num]:
+    for smile in smiles['standard_smiles'].iloc[0:num]:
         mols.append(Chem.MolFromSmiles(smile))
     return np.array(mols)
 

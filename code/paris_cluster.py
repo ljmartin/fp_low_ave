@@ -7,28 +7,15 @@ from sknetwork.hierarchy.postprocess import cut_straight
 from tqdm import tqdm
 
 class ParisClusterer(object):
-    def __init__(self, featureMatrix):
+    def __init__(self, featureMatrix, metric):
         self.featureMatrix = featureMatrix
+        self.metric = metric
 
-    def buildAdjacency(self, type='pynndescent', nn=50, metric='dice'):
-        print('Building nearest neighbor graph (slowest step)...')
-        if type=='pynndescent':
-            nn_index = NNDescent(self.featureMatrix, n_neighbors=nn, metric=metric)
-            n, d = nn_index.neighbor_graph
-            self.n = n
-            self.d = d
-        print('Done')
-        print('Building weighted, directed adjacency matrix...')
-        wdAdj = sparse.dok_matrix((self.featureMatrix.shape[0], self.featureMatrix.shape[0]), dtype=float)
-        for neighbours, distances in tqdm(zip(n, d)):
-            instanceIndex = neighbours[0]
-            for neighbourIndex, distance in zip(neighbours[1:], distances[1:]):
-                wdAdj[instanceIndex, neighbourIndex] += 1-distance #similarity = 1-distance
-        self.wdAdj = sparse.csr_matrix(wdAdj).astype(float)
-        
+    def loadAdjacency(self, name):
+        self.wdAdj = sparse.load_npz(name)
         
     def fit(self):
-        self.paris = Paris(engine='numba')
+        self.paris = Paris()
         self.paris.fit(self.wdAdj)
 
     def balanced_cut(self, max_cluster_size):

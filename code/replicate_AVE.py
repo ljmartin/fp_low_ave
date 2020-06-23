@@ -22,7 +22,7 @@ np.random.seed(utils.getSeed())
 x, y = utils.load_feature_and_label_matrices(type='morgan')
 ##select a subset of columns of 'y' to use as a test matrix:
 #this is the same each time thanks to setting the random.seed.
-col_indices = np.random.choice(243, 10, replace=False)
+col_indices = np.random.choice(226, 6, replace=False)
 x_, y_ = utils.get_subset(x, y, indices=col_indices)
 
 
@@ -45,7 +45,7 @@ sizes_before_trim = list()
 sizes_after_trim = list()
 
 
-for _ in tqdm(range(400)):
+for _ in tqdm(range(200)):
     #choose a random target:
     idx = np.random.choice(y_.shape[1])
 
