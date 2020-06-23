@@ -87,7 +87,7 @@ def get_four_matrices(y_, idx, clusterer, test_clusters, train_clusters):
     inactives_train_indices = (alltrain&allneg).nonzero()[0]
     return actives_test_indices, actives_train_indices, inactives_test_indices, inactives_train_indices
 
-def calc_AVE_quick(dmat, actives_train, actives_test, inactives_train, inactives_test):
+def calc_AVE_quick(dmat, actives_train, actives_test, inactives_train, inactives_test, decomposed=False):
     inactive_dmat = dmat[inactives_test]
     iTest_iTrain_D = inactive_dmat[:,inactives_train].min(1)
     iTest_aTrain_D = inactive_dmat[:,actives_train].min(1)
@@ -100,9 +100,12 @@ def calc_AVE_quick(dmat, actives_train, actives_test, inactives_train, inactives
     aTest_iTrain_S = np.mean( [ np.mean( aTest_iTrain_D < t ) for t in np.linspace( 0, 1.0, 50 ) ] )
     iTest_iTrain_S = np.mean( [ np.mean( iTest_iTrain_D < t ) for t in np.linspace( 0, 1.0, 50 ) ] )
     iTest_aTrain_S = np.mean( [ np.mean( iTest_aTrain_D < t ) for t in np.linspace( 0, 1.0, 50 ) ] )
-    
-    ave = aTest_aTrain_S-aTest_iTrain_S+iTest_iTrain_S-iTest_aTrain_S
-    return ave
+
+    if decomposed:
+        return aTest_aTrain_S, aTest_iTrain_S, iTest_iTrain_S, iTest_aTrain_S
+    else:
+        ave = aTest_aTrain_S-aTest_iTrain_S+iTest_iTrain_S-iTest_aTrain_S
+        return ave
 
 
 def trim(dmat, train_indices, test_indices, fraction_to_trim):
