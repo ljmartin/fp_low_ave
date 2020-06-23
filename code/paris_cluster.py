@@ -7,9 +7,8 @@ from sknetwork.hierarchy.postprocess import cut_straight
 from tqdm import tqdm
 
 class ParisClusterer(object):
-    def __init__(self, featureMatrix, metric):
+    def __init__(self, featureMatrix):
         self.featureMatrix = featureMatrix
-        self.metric = metric
 
     def loadAdjacency(self, name):
         self.wdAdj = sparse.load_npz(name)

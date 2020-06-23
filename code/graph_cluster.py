@@ -1,9 +1,7 @@
 import utils
 from os import path
-
 import numpy as np
 from scipy import stats, sparse
-
 from paris_cluster import ParisClusterer
 from sklearn.linear_model import LogisticRegression
 from tqdm import tqdm
@@ -15,19 +13,19 @@ np.random.seed(utils.getSeed())
 x, y = utils.load_feature_and_label_matrices(type='morgan')
 ##select a subset of columns of 'y' to use as a test matrix:
 #this is the same each time thanks to setting the random.seed.
-col_indices = np.random.choice(243, 100, replace=False)
+col_indices = np.random.choice(226, 100, replace=False)
 x_, y_ = utils.get_subset(x, y, indices=col_indices)
 
 #Open a memory mapped distance matrix.
 #We do this because the pairwise distance matrix for 100 targets does not fit in memory.
 #It is nearly 100% dense and has 117747*117747 = 13864356009 elements. This is also
 #Why it uses float16 (reducing the required storage space to ~26GB, c.f. 52GB for float32).
-distance_matrix = np.memmap('./processed_data/graph_fp_comparison/distMat.dat', dtype=np.float16,
+distance_matrix = np.memmap('./processed_data/distance_matrices/morgan_distance_matrix.dat', dtype=np.float16,
               shape=(x_.shape[0], x_.shape[0]))
 
 
 clusterer = ParisClusterer(x_.toarray())
-clusterer.buildAdjacency()
+clusterer.loadAdjacency('./processed_data/distance_matrices/wadj_ecfp.npz')
 clusterer.fit()
 
 
@@ -36,6 +34,8 @@ aves_before_trim = list()
 aves_after_trim = list()
 ap_before_trim = list()
 ap_after_trim = list()
+mcc_before_trim = list()
+mcc_after_trim = list()
 sizes_before_trim = list()
 sizes_after_trim = list()
 
@@ -45,13 +45,13 @@ cutoffs = list()
 aves = list()
 sizes = list()
 
-for _ in tqdm(range(400)):
+for _ in tqdm(range(200)):
     #choose a random target:
     idx = np.random.choice(y_.shape[1])
 
     #choose a random cluster size upper limit and cluster:
-    clusterSize = np.random.randint(200,10000)
-    clusterer.balanced_cut(clusterSize)
+    clusterSize = np.random.randint(100,7500)
+    clusterer.labels_ = utils.cut_balanced(clusterer.paris.dendrogram_, clusterSize)
 
     clabels = np.unique(clusterer.labels_)
     pos_labels = np.unique(clusterer.labels_[y_[:,idx]==1])
@@ -95,23 +95,27 @@ for _ in tqdm(range(400)):
     aves_after_trim.append(ave)
 
     #evaluate a LogReg model using the original single-linkage split
-    results = utils.evaluate_split(x_, y_, idx, actives_train_idx, actives_test_idx, inactives_train_idx, inactives_test_idx, auroc=False, ap=True)
+    results = utils.evaluate_split(x_, y_, idx, actives_train_idx, actives_test_idx, inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=True)
     ap_before_trim.append(results['ap'])
+    mcc_before_trim.append(results['mcc'])
 
     #evaluate a LogReg model using the new (lower AVE) split:
-    results = utils.evaluate_split(x_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True)
+    results = utils.evaluate_split(x_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=True)
     ap_after_trim.append(results['ap'])
+    mcc_after_trim.append(results['mcc'])
     
     cutoffs.append(clusterSize)
     sizes_after_trim.append([new_actives_train_idx.shape[0], actives_test_idx.shape[0], new_inactives_train_idx.shape[0], inactives_test_idx.shape[0]])
     targets.append(idx)
 
-##Save all the AVEs and model prediction data:
-np.save('./processed_data/graph_cluster/aves_before_trim.npy', np.array(aves_before_trim))
-np.save('./processed_data/graph_cluster/aves_after_trim.npy', np.array(aves_after_trim))
-np.save('./processed_data/graph_cluster/ap_before_trim.npy', np.array(ap_before_trim))
-np.save('./processed_data/graph_cluster/ap_after_trim.npy', np.array(ap_after_trim))
-np.save('./processed_data/graph_cluster/sizes.npy', np.array(sizes))
-np.save('./processed_data/graph_cluster/targets.npy', np.array(targets))
-np.save('./processed_data/graph_cluster/cutoffs.npy', np.array(cutoffs))
+    ##Save all the AVEs and model prediction data:
+    np.save('./processed_data/graph_cluster/aves_before_trim.npy', np.array(aves_before_trim))
+    np.save('./processed_data/graph_cluster/aves_after_trim.npy', np.array(aves_after_trim))
+    np.save('./processed_data/graph_cluster/ap_before_trim.npy', np.array(ap_before_trim))
+    np.save('./processed_data/graph_cluster/ap_after_trim.npy', np.array(ap_after_trim))
+    np.save('./processed_data/graph_cluster/mcc_before_trim.npy', np.array(mcc_before_trim))
+    np.save('./processed_data/graph_cluster/mcc_after_trim.npy', np.array(mcc_after_trim))
+    np.save('./processed_data/graph_cluster/sizes.npy', np.array(sizes))
+    np.save('./processed_data/graph_cluster/targets.npy', np.array(targets))
+    np.save('./processed_data/graph_cluster/cutoffs.npy', np.array(cutoffs))
 

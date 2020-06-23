@@ -3,7 +3,7 @@ from scipy import sparse
 from scipy.spatial.distance import pdist, cdist, squareform
 import copy
 
-from sklearn.metrics import precision_score, recall_score, roc_auc_score, label_ranking_loss
+from sklearn.metrics import precision_score, recall_score, roc_auc_score, label_ranking_loss, matthews_corrcoef
 from sklearn.metrics import confusion_matrix, average_precision_score, label_ranking_average_precision_score
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics.pairwise import cosine_similarity
@@ -111,7 +111,7 @@ def trim(dmat, train_indices, test_indices, fraction_to_trim):
     return new_indices
 
 
-def evaluate_split(x, y, idx, pos_train, pos_test, neg_train, neg_test, auroc=False, ap=True, weight=None):
+def evaluate_split(x, y, idx, pos_train, pos_test, neg_train, neg_test, auroc=False, ap=True, mcc=False, weight=None):
     all_train = np.concatenate([pos_train, neg_train])
     all_test = np.concatenate([pos_test, neg_test])
     x_train = x[all_train]
@@ -130,7 +130,85 @@ def evaluate_split(x, y, idx, pos_train, pos_test, neg_train, neg_test, auroc=Fa
     if ap:
         score = average_precision_score(y_test, probas)
         results['ap']=score
+    if mcc:
+        pred_labels = probas>0.5
+        score = matthews_corrcoef(y_test, pred_labels)
+        results['mcc']=score
     return results
+
+#####
+###Re-writing the balanced cut functions here, because sknetwork may not be stable across versions.
+####
+from typing import Optional, Union, Tuple
+from sknetwork.utils.check import check_n_clusters, check_dendrogram
+def cut_balanced(dendrogram: np.ndarray, max_cluster_size: int = 20, sort_clusters: bool = True,
+                 return_dendrogram: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+    """Cuts a dendrogram with a constraint on the cluster size and returns the corresponding clustering.
+    Parameters
+    ----------
+    dendrogram:
+        Dendrogram
+    max_cluster_size :
+        Maximum size of each cluster.
+    sort_clusters :
+        If ``True``, sort labels in decreasing order of cluster size.
+    return_dendrogram :
+        If ``True``, returns the dendrogram formed by the clusters up to the root.
+    Returns
+    -------
+    labels : np.ndarray
+        Label of each node.
+    dendrogram_aggregate : np.ndarray
+        Dendrogram starting from clusters (leaves = clusters).
+    Example
+    -------
+    >>> from sknetwork.hierarchy import cut_balanced
+    >>> dendrogram = np.array([[0, 1, 0, 2], [2, 3, 1, 3]])
+    >>> cut_balanced(dendrogram, 2)
+    array([0, 0, 1])
+    """
+    check_dendrogram(dendrogram)
+    n = dendrogram.shape[0] + 1
+    if max_cluster_size < 2 or max_cluster_size > n:
+        raise ValueError("The maximum cluster size must be between 2 and the number of nodes.")
+
+    cluster = {i: [i] for i in range(n)}
+    for t in range(n - 1):
+        i = int(dendrogram[t][0])
+        j = int(dendrogram[t][1])
+        if i in cluster and j in cluster and len(cluster[i]) + len(cluster[j]) <= max_cluster_size:
+            cluster[n + t] = cluster.pop(i) + cluster.pop(j)
+
+    return get_labels(dendrogram, cluster, sort_clusters, return_dendrogram)
+
+def get_labels(dendrogram: np.ndarray, cluster: dict, sort_clusters: bool, return_dendrogram: bool):
+    """Returns the labels from clusters."""
+    n = dendrogram.shape[0] + 1
+    n_clusters = len(cluster)
+    clusters = np.array(list(cluster.values()))
+    index = None
+    if sort_clusters:
+        sizes = np.array([len(nodes) for nodes in clusters])
+        index = np.argsort(-sizes)
+        clusters = clusters[index]
+
+    labels = np.zeros(n, dtype=int)
+    for label, nodes in enumerate(clusters):
+        labels[nodes] = label
+
+    if return_dendrogram:
+        indices_clusters = np.array(list(cluster.keys()))
+        if sort_clusters:
+            indices_clusters = indices_clusters[index]
+        index_new = np.zeros(2 * n - 1, int)
+        index_new[np.array(indices_clusters)] = np.arange(n_clusters)
+        index_new[- n_clusters + 1:] = np.arange(n_clusters, 2 * n_clusters - 1)
+        dendrogram_new = dendrogram[- n_clusters + 1:].copy()
+        dendrogram_new[:, 0] = index_new[dendrogram_new[:, 0].astype(int)]
+        dendrogram_new[:, 1] = index_new[dendrogram_new[:, 1].astype(int)]
+        return labels, dendrogram_new
+    else:
+        return labels
 
 
 
