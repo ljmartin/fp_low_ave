@@ -23,6 +23,9 @@ x_, y_ = utils.get_subset(x, y, indices=col_indices)
 distance_matrix = np.memmap('./processed_data/distance_matrices/morgan_distance_matrix.dat', dtype=np.float16,
               shape=(x_.shape[0], x_.shape[0]))
 
+distance_matrix = np.memmap('./processed_data/distance_matrices/cats_distance_matrix.dat', dtype=np.float16,
+              shape=(x_.shape[0], x_.shape[0]))
+
 
 clusterer = ParisClusterer(x_.toarray())
 clusterer.loadAdjacency('./processed_data/distance_matrices/wadj_ecfp.npz')
@@ -109,13 +112,13 @@ for _ in tqdm(range(400)):
     targets.append(idx)
 
     ##Save all the AVEs and model prediction data:
-    np.save('./processed_data/graph_cluster/aves_before_trim.npy', np.array(aves_before_trim))
-    np.save('./processed_data/graph_cluster/aves_after_trim.npy', np.array(aves_after_trim))
-    np.save('./processed_data/graph_cluster/ap_before_trim.npy', np.array(ap_before_trim))
-    np.save('./processed_data/graph_cluster/ap_after_trim.npy', np.array(ap_after_trim))
-    np.save('./processed_data/graph_cluster/mcc_before_trim.npy', np.array(mcc_before_trim))
-    np.save('./processed_data/graph_cluster/mcc_after_trim.npy', np.array(mcc_after_trim))
-    np.save('./processed_data/graph_cluster/sizes.npy', np.array(sizes))
-    np.save('./processed_data/graph_cluster/targets.npy', np.array(targets))
-    np.save('./processed_data/graph_cluster/cutoffs.npy', np.array(cutoffs))
+    np.save('./processed_data/graph_cluster_both/aves_before_trim.npy', np.array(aves_before_trim))
+    np.save('./processed_data/graph_cluster_both/aves_after_trim.npy', np.array(aves_after_trim))
+    np.save('./processed_data/graph_cluster_both/ap_before_trim.npy', np.array(ap_before_trim))
+    np.save('./processed_data/graph_cluster_both/ap_after_trim.npy', np.array(ap_after_trim))
+    np.save('./processed_data/graph_cluster_both/mcc_before_trim.npy', np.array(mcc_before_trim))
+    np.save('./processed_data/graph_cluster_both/mcc_after_trim.npy', np.array(mcc_after_trim))
+    np.save('./processed_data/graph_cluster_both/sizes.npy', np.array(sizes))
+    np.save('./processed_data/graph_cluster_both/targets.npy', np.array(targets))
+    np.save('./processed_data/graph_cluster_both/cutoffs.npy', np.array(cutoffs))
 

@@ -114,7 +114,7 @@ def trim(dmat, train_indices, test_indices, fraction_to_trim):
     return new_indices
 
 
-def evaluate_split(x, y, idx, pos_train, pos_test, neg_train, neg_test, auroc=False, ap=True, mcc=False, weight=None):
+def evaluate_split(x, y, idx, pos_train, pos_test, neg_train, neg_test, auroc=False, ap=True, mcc=False, ef=False, weight=None):
     all_train = np.concatenate([pos_train, neg_train])
     all_test = np.concatenate([pos_test, neg_test])
     x_train = x[all_train]
@@ -137,6 +137,15 @@ def evaluate_split(x, y, idx, pos_train, pos_test, neg_train, neg_test, auroc=Fa
         pred_labels = probas>0.5
         score = matthews_corrcoef(y_test, pred_labels)
         results['mcc']=score
+    if ef:
+        chi = 0.05
+        N = len(probas)
+        n = sum(y_test)
+        chi_N = chi*N
+        ranks = (-probas).argsort().argsort()+1 #(1-indexed)
+        denominator = (ranks[y_test.nonzero()[0]]<=chi_N).sum()
+        enrichment_factor = denominator / (chi*n)
+        results['ef'] = enrichment_factor
     return results
 
 #####

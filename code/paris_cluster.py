@@ -1,6 +1,6 @@
 import numpy as np
 from scipy import sparse
-from pynndescent import NNDescent
+#from pynndescent import NNDescent
 from sknetwork.hierarchy import Paris
 from sknetwork.hierarchy.postprocess import cut_straight
 

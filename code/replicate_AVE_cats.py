@@ -5,6 +5,7 @@ import numpy as np
 from scipy import stats, sparse
 from scipy.spatial.distance import pdist, squareform
 
+from sklearn.metrics.pairwise import cosine_distances
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.linear_model import LogisticRegression
 from tqdm import tqdm
@@ -27,7 +28,7 @@ x_, y_ = utils.get_subset(x, y, indices=col_indices)
 
 
 #This will be used for clustering:
-distance_matrix = utils.fast_dice(x_)
+distance_matrix = (cosine_distances(x_)/2)**0.25
 
 
 

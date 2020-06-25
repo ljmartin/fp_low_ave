@@ -1,10 +1,11 @@
 import utils
 from os import path
-
+import pandas as pd
 import numpy as np
 from scipy import stats, sparse
 from scipy.spatial.distance import pdist, squareform
 
+from sklearn.metrics.pairwise import cosine_distances
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.linear_model import LogisticRegression
 from tqdm import tqdm
@@ -25,25 +26,23 @@ x, y = utils.load_feature_and_label_matrices(type='morgan')
 col_indices = np.random.choice(226, 6, replace=False)
 x_, y_ = utils.get_subset(x, y, indices=col_indices)
 
+#load cats one as well:
+x_cats, y = utils.load_feature_and_label_matrices(type='cats')
+x_cats_, _ = utils.get_subset(x_cats, y, indices=col_indices)
 
 #This will be used for clustering:
 distance_matrix = utils.fast_dice(x_)
-
+cats_distance_matrix = (cosine_distances(x_cats_)/2)**0.25
 
 
 #These will be used to save all the data so we don't have to repeatedly run this script
 targets = list() #store which target is analyzed (not used)
-cutoffs = list() #store the cutoff value used (dice distance)
+results_df = pd.DataFrame(columns = ['ave_cats_before', 'ave_cats_after', 'ave_morgan_before',
+                                     'ave_morgan_after', 'auroc_before', 'auroc_after',
+                                     'ap_before', 'ap_after', 'mcc_before', 'mcc_after',
+                                     'ef_before', 'ef_after', 'targets'])
 
-aves_before_trim = list()
-aves_after_trim = list()
-auroc_before_trim = list()
-auroc_after_trim = list()
-ap_before_trim = list()
-ap_after_trim = list()
-sizes_before_trim = list()
-sizes_after_trim = list()
-
+loc_counter=0
 
 for _ in tqdm(range(200)):
     #choose a random target:
@@ -67,10 +66,30 @@ for _ in tqdm(range(200)):
     if min([actives_test_idx.shape[0], actives_train_idx.shape[0], inactives_test_idx.shape[0], inactives_train_idx.shape[0]])<20:        
         #print('Not enough ligands to train and test')
         continue
-    ave= utils.calc_AVE_quick(distance_matrix, actives_train_idx, actives_test_idx,inactives_train_idx, inactives_test_idx)
-    aves_before_trim.append(ave)
-    sizes_before_trim.append([actives_train_idx.shape[0], actives_test_idx.shape[0], inactives_train_idx.shape[0], inactives_test_idx.shape[0]])
 
+    results_dict = dict()
+
+    #####
+    ##Calculate AVE's wrt each fingerprint, before trimming nearest neighbors.
+    #####    
+    ave_morgan= utils.calc_AVE_quick(distance_matrix, actives_train_idx, actives_test_idx,inactives_train_idx, inactives_test_idx)
+    ave_cats= utils.calc_AVE_quick(cats_distance_matrix, actives_train_idx, actives_test_idx,inactives_train_idx, inactives_test_idx)
+    results_dict['ave_cats_before']=ave_cats
+    results_dict['ave_morgan_before']=ave_morgan
+    
+    #evaluate a LogReg model using the original single-linkage split
+    results = utils.evaluate_split(x_, y_, idx, actives_train_idx, actives_test_idx, inactives_train_idx, inactives_test_idx, auroc=True, ap=True, mcc=True, ef=True)
+    results_dict['auroc_before']=results['auroc']
+    results_dict['ap_before']=results['ap']
+    results_dict['mcc_before']=results['mcc']
+    results_dict['ef_before']=results['ef']
+
+
+
+    #####
+    ##Trim some nearest neighbors from the training set, then repeat:
+    #####
+    
     #Now we will trim some nearest neighbours and by doing so, reduce AVE.
     #trim from the inactives/train matrix first:
     inactive_dmat = distance_matrix[inactives_test_idx]
@@ -85,37 +104,22 @@ for _ in tqdm(range(200)):
                                     actives_test_idx,
                                        fraction_to_trim=0.2)
 
-    #now calculate AVE with this new split:
-    ave= utils.calc_AVE_quick(distance_matrix, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx)
-    aves_after_trim.append(ave)
-    sizes_after_trim.append([new_actives_train_idx.shape[0], actives_test_idx.shape[0], new_inactives_train_idx.shape[0], inactives_test_idx.shape[0]])
+    ave_morgan= utils.calc_AVE_quick(distance_matrix, new_actives_train_idx, actives_test_idx,new_inactives_train_idx, inactives_test_idx)
+    ave_cats= utils.calc_AVE_quick(cats_distance_matrix, new_actives_train_idx, actives_test_idx,new_inactives_train_idx, inactives_test_idx)
+    results_dict['ave_cats_after']=ave_cats
+    results_dict['ave_morgan_after']=ave_morgan
 
-    
     #evaluate a LogReg model using the original single-linkage split
-    results = utils.evaluate_split(x_, y_, idx, actives_train_idx, actives_test_idx, inactives_train_idx, inactives_test_idx, auroc=True, ap=True)
-    auroc_before_trim.append(results['auroc'])
-    ap_before_trim.append(results['ap'])
+    results = utils.evaluate_split(x_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=True, ap=True, mcc=True, ef=True)
+    results_dict['auroc_after']=results['auroc']
+    results_dict['ap_after']=results['ap']
+    results_dict['mcc_after']=results['mcc']
+    results_dict['ef_after']=results['ef']
 
-    #evaluate a LogReg model using the new (lower AVE) split:
-    results = utils.evaluate_split(x_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=True, ap=True)
-    auroc_after_trim.append(results['auroc'])
-    ap_after_trim.append(results['ap'])
+    results_dict['targets']=idx
+
+    results_df.loc[loc_counter] = results_dict
+    loc_counter+=1
     
-    cutoffs.append(cutoff)
-    
-    targets.append(idx)
 
-    
-##Save all the AVEs and model prediction data:
-np.save('./processed_data/replicate_AVE/aves_before_trim.npy', np.array(aves_before_trim))
-np.save('./processed_data/replicate_AVE/aves_after_trim.npy', np.array(aves_after_trim))
-np.save('./processed_data/replicate_AVE/auroc_before_trim.npy', np.array(auroc_before_trim))
-np.save('./processed_data/replicate_AVE/auroc_after_trim.npy', np.array(auroc_after_trim))
-np.save('./processed_data/replicate_AVE/ap_before_trim.npy', np.array(ap_before_trim))
-np.save('./processed_data/replicate_AVE/ap_after_trim.npy', np.array(ap_after_trim))
-np.save('./processed_data/replicate_AVE/sizes_before_trim.npy', np.array(sizes_before_trim))
-np.save('./processed_data/replicate_AVE/sizes_after_trim.npy', np.array(sizes_after_trim))
-np.save('./processed_data/replicate_AVE/targets.npy', np.array(targets))
-np.save('./processed_data/replicate_AVE/cutoffs.npy', np.array(cutoffs))
-
-
+    results_df.to_csv('./processed_data/replicate_AVE/results_df.csv')
