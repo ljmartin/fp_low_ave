@@ -50,12 +50,12 @@ sizes = list()
 
 loc_counter = 0
 
-for _ in tqdm(range(400)):
+for _ in tqdm(range(1500), smoothing=0):
     #choose a random target:
     idx = np.random.choice(y_.shape[1])
 
     #choose a random cluster size upper limit and cluster:
-    clusterSize = np.random.randint(100,7500)
+    clusterSize = np.random.randint(300,10000)
     clusterer.labels_ = utils.cut_balanced(clusterer.paris.dendrogram_, clusterSize)
 
     clabels = np.unique(clusterer.labels_)
@@ -75,14 +75,10 @@ for _ in tqdm(range(400)):
            continue
 
 
-    ######
-    ###Evaluate the untrimmed data:
-    ######
-    results_morgan = utils.evaluate_split(x_, y_, idx, actives_train_idx, actives_test_idx, inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=False)
-    results_cats = utils.evaluate_split(catsMatrix_, y_, idx, actives_train_idx, actives_test_idx, inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=False)    
-    ave_morgan= utils.calc_AVE_quick(morgan_distance_matrix, actives_train_idx, actives_test_idx,inactives_train_idx, inactives_test_idx)
-    ave_cats= utils.calc_AVE_quick(cats_distance_matrix, actives_train_idx, actives_test_idx,inactives_train_idx, inactives_test_idx)
-    df_before_trim.loc[loc_counter] = [ave_cats, ave_morgan, results_cats['ap'], results_morgan['ap']]
+    ave_morgan_before= utils.calc_AVE_quick(morgan_distance_matrix, actives_train_idx, actives_test_idx,inactives_train_idx, inactives_test_idx)
+    if ave_morgan_before>0.2: #debiasing is unlikely to get a low AVE from this point. So this evaluation is not useful to us. 
+        continue
+    
 
 
     ######
@@ -104,14 +100,28 @@ for _ in tqdm(range(400)):
                                     actives_test_idx,
                                      fraction_to_trim=0.2)
 
+
+    ave_morgan_after= utils.calc_AVE_quick(morgan_distance_matrix, new_actives_train_idx, actives_test_idx,new_inactives_train_idx, inactives_test_idx)
+    #if ave_morgan_after>0.05:
+    #    continue #this point cannot be used because it has high AVE bias. 
+    
+    ######
+    ###Evaluate the untrimmed data:
+    ######
+    ave_cats_before= utils.calc_AVE_quick(cats_distance_matrix, actives_train_idx, actives_test_idx,inactives_train_idx, inactives_test_idx)
+    results_morgan = utils.evaluate_split(x_, y_, idx, actives_train_idx, actives_test_idx, inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=False)
+    results_cats = utils.evaluate_split(catsMatrix_, y_, idx, actives_train_idx, actives_test_idx, inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=False)    
+    df_before_trim.loc[loc_counter] = [ave_cats_before, ave_morgan_before, results_cats['ap'], results_morgan['ap']]
+
+
+
     ######
     ###Evaluate the data trimmed wrt ECFP
     ######
     results_morgan = utils.evaluate_split(x_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True)
-    results_cats = utils.evaluate_split(catsMatrix_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True)    
-    ave_morgan= utils.calc_AVE_quick(morgan_distance_matrix, new_actives_train_idx, actives_test_idx,new_inactives_train_idx, inactives_test_idx)
-    ave_cats= utils.calc_AVE_quick(cats_distance_matrix, new_actives_train_idx, actives_test_idx,new_inactives_train_idx, inactives_test_idx)
-    df_after_morgan_trim.loc[loc_counter] = [ave_cats, ave_morgan, results_cats['ap'], results_morgan['ap']]
+    results_cats = utils.evaluate_split(catsMatrix_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True)
+    ave_cats_after= utils.calc_AVE_quick(cats_distance_matrix, new_actives_train_idx, actives_test_idx,new_inactives_train_idx, inactives_test_idx)
+    df_after_morgan_trim.loc[loc_counter] = [ave_cats_after, ave_morgan_after, results_cats['ap'], results_morgan['ap']]
 
 
     ######
