@@ -38,9 +38,18 @@ clusterer.fit()
 
 
 #Store all the results in these:
-df_before_trim = pd.DataFrame(columns = ['ave_cats', 'ave_morgan', 'ap_cats', 'ap_morgan'])
-df_after_morgan_trim = pd.DataFrame(columns = ['ave_cats', 'ave_morgan', 'ap_cats', 'ap_morgan'])
-df_after_cats_trim = pd.DataFrame(columns = ['ave_cats', 'ave_morgan', 'ap_cats', 'ap_morgan'])
+df_before_trim = pd.DataFrame(columns = ['ave_cats', 'ave_morgan',
+                                         'ap_cats', 'ap_morgan',
+                                         'mcc_cats', 'mcc_morgan',
+                                         'ef_cats', 'ef_morgan'])
+df_after_morgan_trim = pd.DataFrame(columns = ['ave_cats', 'ave_morgan',
+                                               'ap_cats', 'ap_morgan',
+                                               'mcc_cats', 'mcc_morgan',
+                                               'ef_cats', 'ef_morgan'])
+df_after_cats_trim = pd.DataFrame(columns = ['ave_cats', 'ave_morgan',
+                                             'ap_cats', 'ap_morgan',
+                                             'mcc_cats', 'mcc_morgan',
+                                             'ef_cats', 'ef_morgan'])
 
 
 targets = list()
@@ -102,26 +111,30 @@ for _ in tqdm(range(1500), smoothing=0):
 
 
     ave_morgan_after= utils.calc_AVE_quick(morgan_distance_matrix, new_actives_train_idx, actives_test_idx,new_inactives_train_idx, inactives_test_idx)
-    #if ave_morgan_after>0.05:
-    #    continue #this point cannot be used because it has high AVE bias. 
+
     
     ######
     ###Evaluate the untrimmed data:
     ######
     ave_cats_before= utils.calc_AVE_quick(cats_distance_matrix, actives_train_idx, actives_test_idx,inactives_train_idx, inactives_test_idx)
-    results_morgan = utils.evaluate_split(x_, y_, idx, actives_train_idx, actives_test_idx, inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=False)
-    results_cats = utils.evaluate_split(catsMatrix_, y_, idx, actives_train_idx, actives_test_idx, inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=False)    
-    df_before_trim.loc[loc_counter] = [ave_cats_before, ave_morgan_before, results_cats['ap'], results_morgan['ap']]
-
+    results_morgan = utils.evaluate_split(x_, y_, idx, actives_train_idx, actives_test_idx, inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=True, ef=True)
+    results_cats = utils.evaluate_split(catsMatrix_, y_, idx, actives_train_idx, actives_test_idx, inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=True, ef=True)
+    df_before_trim.loc[loc_counter] = [ave_cats_before, ave_morgan_before,
+                                       results_cats['ap'], results_morgan['ap'],
+                                       results_cats['mcc'], results_morgan['mcc'],
+                                       results_cats['ef'], results_cats['ef']]
 
 
     ######
     ###Evaluate the data trimmed wrt ECFP
     ######
-    results_morgan = utils.evaluate_split(x_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True)
-    results_cats = utils.evaluate_split(catsMatrix_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True)
+    results_morgan = utils.evaluate_split(x_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=True, ef=True)
+    results_cats = utils.evaluate_split(catsMatrix_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=True, ef=True)
     ave_cats_after= utils.calc_AVE_quick(cats_distance_matrix, new_actives_train_idx, actives_test_idx,new_inactives_train_idx, inactives_test_idx)
-    df_after_morgan_trim.loc[loc_counter] = [ave_cats_after, ave_morgan_after, results_cats['ap'], results_morgan['ap']]
+    df_after_morgan_trim.loc[loc_counter] = [ave_cats_before, ave_morgan_before,
+                                       results_cats['ap'], results_morgan['ap'],
+                                       results_cats['mcc'], results_morgan['mcc'],
+                                       results_cats['ef'], results_cats['ef']]
 
 
     ######
@@ -147,11 +160,14 @@ for _ in tqdm(range(1500), smoothing=0):
     ######
     ###Evaluate the data trimmed wrt CATS
     ######
-    results_morgan = utils.evaluate_split(x_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True)
-    results_cats = utils.evaluate_split(catsMatrix_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True)    
+    results_morgan = utils.evaluate_split(x_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=True, ef=True)
+    results_cats = utils.evaluate_split(catsMatrix_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=True, ef=True)
     ave_morgan= utils.calc_AVE_quick(morgan_distance_matrix, new_actives_train_idx, actives_test_idx,new_inactives_train_idx, inactives_test_idx)
     ave_cats= utils.calc_AVE_quick(cats_distance_matrix, new_actives_train_idx, actives_test_idx,new_inactives_train_idx, inactives_test_idx)
-    df_after_cats_trim.loc[loc_counter] = [ave_cats, ave_morgan, results_cats['ap'], results_morgan['ap']]
+    df_after_cats_trim.loc[loc_counter] = [ave_cats_before, ave_morgan_before,
+                                       results_cats['ap'], results_morgan['ap'],
+                                       results_cats['mcc'], results_morgan['mcc'],
+                                       results_cats['ef'], results_cats['ef']]
 
 
 
