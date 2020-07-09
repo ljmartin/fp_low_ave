@@ -108,9 +108,14 @@ def calc_AVE_quick(dmat, actives_train, actives_test, inactives_train, inactives
         return ave
 
 
-def trim(dmat, train_indices, test_indices, fraction_to_trim):
+def trim(dmat, train_indices, test_indices, fraction_to_trim, inverse = False):
     num_to_trim = int(len(train_indices)*fraction_to_trim)
-    new_indices = train_indices[dmat[:,train_indices].min(0).argsort()[num_to_trim:]]
+
+    indices = dmat[:,train_indices].min(0).argsort()
+    if inverse:
+        return indices
+    else:
+        new_indices = train_indices[indices[num_to_trim:]]
     return new_indices
 
 

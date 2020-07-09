@@ -122,7 +122,7 @@ for _ in tqdm(range(1500), smoothing=0):
     df_before_trim.loc[loc_counter] = [ave_cats_before, ave_morgan_before,
                                        results_cats['ap'], results_morgan['ap'],
                                        results_cats['mcc'], results_morgan['mcc'],
-                                       results_cats['ef'], results_cats['ef']]
+                                       results_cats['ef'], results_morgan['ef']]
 
 
     ######
@@ -131,10 +131,10 @@ for _ in tqdm(range(1500), smoothing=0):
     results_morgan = utils.evaluate_split(x_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=True, ef=True)
     results_cats = utils.evaluate_split(catsMatrix_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=True, ef=True)
     ave_cats_after= utils.calc_AVE_quick(cats_distance_matrix, new_actives_train_idx, actives_test_idx,new_inactives_train_idx, inactives_test_idx)
-    df_after_morgan_trim.loc[loc_counter] = [ave_cats_before, ave_morgan_before,
+    df_after_morgan_trim.loc[loc_counter] = [ave_cats_after, ave_morgan_after,
                                        results_cats['ap'], results_morgan['ap'],
                                        results_cats['mcc'], results_morgan['mcc'],
-                                       results_cats['ef'], results_cats['ef']]
+                                       results_cats['ef'], results_morgan['ef']]
 
 
     ######
@@ -164,10 +164,10 @@ for _ in tqdm(range(1500), smoothing=0):
     results_cats = utils.evaluate_split(catsMatrix_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=True, ef=True)
     ave_morgan= utils.calc_AVE_quick(morgan_distance_matrix, new_actives_train_idx, actives_test_idx,new_inactives_train_idx, inactives_test_idx)
     ave_cats= utils.calc_AVE_quick(cats_distance_matrix, new_actives_train_idx, actives_test_idx,new_inactives_train_idx, inactives_test_idx)
-    df_after_cats_trim.loc[loc_counter] = [ave_cats_before, ave_morgan_before,
+    df_after_cats_trim.loc[loc_counter] = [ave_cats, ave_morgan,
                                        results_cats['ap'], results_morgan['ap'],
                                        results_cats['mcc'], results_morgan['mcc'],
-                                       results_cats['ef'], results_cats['ef']]
+                                       results_cats['ef'], results_morgan['ef']]
 
 
 
