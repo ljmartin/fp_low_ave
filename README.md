@@ -8,7 +8,7 @@ For the main result, see the figure (panels A and B) below. This shows the perfo
 
 
 
-![result](./code/processed_data/graph_fp_comparison/fp_comparison.png)
+![result](./code/processed_data/graph_fp_comparison/ave_distribution.png)
 
 
 
