@@ -15,15 +15,22 @@ from tqdm import tqdm
 ##Set plotting parameters:
 utils.set_mpl_params()
 
-aves_before_trim = np.load('./processed_data/graph_cluster/aves_before_trim.npy')
-aves_after_trim = np.load('./processed_data/graph_cluster/aves_after_trim.npy')
-ap_before_trim = np.load('./processed_data/graph_cluster/ap_before_trim.npy')
-ap_after_trim = np.load('./processed_data/graph_cluster/ap_after_trim.npy')
+#aves_before_trim = np.load('./processed_data/graph_cluster/aves_before_trim.npy')
+#aves_after_trim = np.load('./processed_data/graph_cluster/aves_after_trim.npy')
+#ap_before_trim = np.load('./processed_data/graph_cluster/ap_before_trim.npy')
+#ap_after_trim = np.load('./processed_data/graph_cluster/ap_after_trim.npy')
 
-targets = np.load('processed_data/graph_cluster/targets.npy', allow_pickle=True)
-cutoffs = np.load('processed_data/graph_cluster/cutoffs.npy', allow_pickle=True)
+#targets = np.load('processed_data/graph_cluster/targets.npy', allow_pickle=True)
+#cutoffs = np.load('processed_data/graph_cluster/cutoffs.npy', allow_pickle=True)
 #sizes = np.load('processed_data/graph_cluster/sizes.npy', allow_pickle=True)
 
+
+import pandas as pd
+df = pd.read_csv('./processed_data/graph_cluster/results.csv')
+aves_before_trim = df['ave_before_trim']
+aves_after_trim = df['ave_after_trim']
+ap_before_trim = df['ap_before_trim']
+ap_after_trim = df['ap_after_trim']
 
 fig, ax = plt.subplots(2,1)
 fig.set_figheight(7.5)
@@ -41,8 +48,8 @@ ax[0].legend()
 utils.plot_fig_label(ax[0], 'A.')
 
 
-for a,b,c,d in zip(aves_before_trim, aves_after_trim, ap_before_trim, ap_after_trim):
-    ax[1].plot([a,b], [c,d], lw=0.2, c='k')
+#for a,b,c,d in zip(aves_before_trim, aves_after_trim, ap_before_trim, ap_after_trim):
+#    ax[1].plot([a,b], [c,d], lw=0.2, c='k')
 ax[1].scatter(aves_before_trim, ap_before_trim, alpha=utils.ALPHA, label='Before trim')
 ax[1].scatter(aves_after_trim, ap_after_trim, alpha=utils.ALPHA, label='After trim')
 ax[1].set_xlabel('AVE')
