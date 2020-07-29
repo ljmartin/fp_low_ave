@@ -15,44 +15,24 @@ from tqdm import tqdm
 from seaborn import kdeplot
 import pymc3 as pm
 
+
+
 ##Set plotting parameters:
 utils.set_mpl_params()
 
-fname = './processed_data/graph_cluster_both/df_before_trim.csv'
+##load up files:
+fname = './processed_data/graph_fp_comparison/df_before_trim.csv'
 before_trim = pd.read_csv(fname, index_col=0)
 
-fname = './processed_data/graph_cluster_both/df_after_morgan_trim.csv'
+fname = './processed_data/graph_fp_comparison/df_after_morgan_trim.csv'
 after_morgan_trim = pd.read_csv(fname, index_col=0)
 
-fname = './processed_data/graph_cluster_both/df_after_cats_trim.csv'
+fname = './processed_data/graph_fp_comparison/df_after_cats_trim.csv'
 after_cats_trim = pd.read_csv(fname, index_col=0)
 
 
-
-fig, ax = plt.subplots(2, 1)
-fig.set_figheight(10)
-fig.set_figwidth(8)
-kdeplot(after_morgan_trim['ave_morgan'], ax=ax[0], label='$AVE_{Morgan}$', c='C0')
-kdeplot(after_cats_trim['ave_cats'], ax=ax[0], label='$AVE_{CATS}$', c='C1', )
-
-num = len(after_morgan_trim['ave_morgan'])
-ax[0].scatter(after_morgan_trim['ave_morgan'], np.random.uniform(-1, -0.5, num), c='C0', alpha=0.05)
-ax[0].scatter(after_cats_trim['ave_cats'], np.random.uniform(-0.5, 0.0, num), c='C1',alpha=0.05)
-
-ax[0].set_title('AVE achieved after debiasing')
-ax[0].set_xlabel('AVE')
-ax[0].set_ylabel('Density')
-ax[0].grid()
-ax[0].legend()
-ax[0].axvline(0, linestyle='--', c='k')
-
-utils.plot_fig_label(ax[0], 'A.')
-
-
-
-
-
-####Now do some arithmetic-mean estimation:
+##This function calculates the mean (or median if desired) of
+##the input data using MCMC (actually No-U-Turn-Sampling thru PyMC)
 def calc_hpd(data, statistic=np.mean):
     with pm.Model() as model:
         #prior on statistic of interest:
@@ -69,48 +49,76 @@ def calc_hpd(data, statistic=np.mean):
     return trace
 
 
-cutoffs = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.125, 0.15]
-
-MAPs = list()
-HPD_high = list()
-HPD_low = list()
+##get the MCMC samples of log(cats_ap  /  morgan_ap)
+tr = calc_hpd(np.log(after_cats_trim['ap_cats'] / after_morgan_trim['ap_morgan']))
 
 
-for cutoff in cutoffs:
-    #generate masks that ensure all AVE's are within the +/- the cutoff:
-    mask = (after_morgan_trim['ave_morgan']<cutoff) & (after_cats_trim['ave_cats']<cutoff)
-    mask = np.logical_and(mask, ((after_morgan_trim['ave_morgan']>-cutoff) & (after_cats_trim['ave_cats']>-cutoff)))
+
+fig, ax = plt.subplots(2,2)
+fig.set_figwidth(13)
+fig.set_figheight(10)
+
+
+hpd = np.exp(pm.hpd(tr['a']))
+#hpd = pm.hpd(tr['a'])
+#plot AVE scores KDEs:    
+kdeplot(after_morgan_trim['ave_morgan'], ax=ax[0,0], label='AVE$_{Morgan}$')
+kdeplot(after_cats_trim['ave_cats'], ax=ax[0,0], label='AVE$_{CATS}$')
+ax[0,0].set_ylabel('Density')
+ax[0,0].set_title('AVE after debiasing')
+utils.plot_fig_label(ax[0,0], 'A.')
+
+
+
+#plot AVE vs AP:
+ax[0,1].scatter(after_morgan_trim['ave_morgan'], after_morgan_trim['ap_morgan'], 
+                c='C0', label='Morgan', zorder=0, alpha=0.85)
+ax[0,1].scatter(after_cats_trim['ave_cats'], after_cats_trim['ap_cats'], 
+                c='C1', label='CATS',zorder=1, alpha=0.65)
+ax[0,1].axvline(0, linestyle='--', c='k')
+ax[0,1].set_ylabel('Average Precision (AP)')
+ax[0,1].legend()
+ax[0,1].set_title('Bias - performance relationship')
+utils.plot_fig_label(ax[0,1], 'B.')
+
+
+#plot one-tailed estimate:
+Z = np.exp(tr['a'])
+#Z = tr['a']
+N = len(Z)
+H,X1 = np.histogram( Z, bins = 3000, density=True)
+dx = X1[1] - X1[0]
+F1 = np.cumsum(H)*dx
+ax[1,0].plot(X1[1:], 1-F1)
+ax[1,0].axvline(1, c='k', linestyle='--')
+ax[1,0].set_ylabel('Probability')
+ax[1,0].set_xlabel('$\dfrac{AP_{CATS}}{AP_{Morgan}}$')
+ax[1,0].set_title('Probability of CATS vs Morgan performance')
+utils.plot_fig_label(ax[1,0], 'C.')
+
+#plot two-tailed estimate:
+kdeplot(np.exp(tr['a']), ax=ax[1,1], c='C5')
+#kdeplot(tr['a'], ax=ax[1,1], c='C5')
+ax[1,1].plot([hpd[0],hpd[1]],[0,0],'-o', c='C5', label='95% credible region')
+#ax[1,1].scatter(tr['a'].mean(), 0, s= 300, facecolor='white',zorder=10,edgecolor='C5')
+ax[1,1].scatter(np.exp(tr['a'].mean()), 0, s= 300, facecolor='white',zorder=10,edgecolor='C5')
+ax[1,1].set_xlabel('$\dfrac{AP_{CATS}}{AP_{Morgan}}$')
+ax[1,1].set_ylabel('Density')
+ax[1,1].set_title('Estimated CATS vs Morgan performance')
+ax[1,1].legend()
+utils.plot_fig_label(ax[1,1], 'D.')
+
+for a in ax.flatten():
+    a.grid()
+#     #a.axvline(l, linestyle='--', c='k')
+#     #a.legend()
+
     
-    ##logit:
-    #trace = calc_hpd(logit(after_cats_trim['ap_cats'][mask]) - logit(after_morgan_trim['ap_morgan'][mask]))
-    #max_a_posteriori = np.mean(trace['a'])
-    #hpd = pm.stats.hpd(trace['a'], credible_interval=0.95)
-
-    #relative:
-    trace = calc_hpd( np.log(after_cats_trim['ap_cats'][mask] / after_morgan_trim['ap_morgan']) )
-    max_a_posteriori = np.exp(np.mean(trace['a']))
-    hpd = np.exp( pm.stats.hpd(trace['a'], credible_interval=0.95) )
-
-    MAPs.append(max_a_posteriori)
-    HPD_high.append(hpd[1])
-    HPD_low.append(hpd[0])
-
-ax[1].axhline(1,c='k', linestyle='--')
-
-ax[1].set_title('Relative performance of CATS and\nMorgan fingerprints after debiasing')
-ax[1].fill_between(x=cutoffs, y2=HPD_high, y1=HPD_low, label='95% credible region')
-#ax[1].plot(cutoffs, HPD_high, 'k', marker='o', mfc='white')
-#ax[1].plot(cutoffs, HPD_low, 'k', marker='o', mfc='white')
-ax[1].plot(cutoffs, HPD_high, 'k', )
-ax[1].plot(cutoffs, HPD_low, 'k', )
-ax[1].plot(cutoffs, MAPs, marker='o', color='k',mfc='white', mec='k', label='Max. a posteriori estimate')
-
-ax[1].legend()
-ax[1].set_xlabel('AVE cutoff, +/-')
-ax[1].set_ylabel('Average precision relative\nto Morgan fingerprint')
+ax[1,0].axvline(1, linestyle='--', c='k')
+ax[1,1].axvline(1, linestyle='--', c='k')
+ax[0,0].axvline(0, linestyle='--', c='k')
+ax[0,0].set_xlabel('AVE')
+ax[0,1].set_xlabel('AVE')
 
 
-
-fig.savefig('./processed_data/graph_fp_comparison/ave_distribution.png')
-fig.savefig('./processed_data/graph_fp_comparison/ave_distribution.tif')
-plt.close(fig)
+fig.savefig('./processed_data/graph_fp_comparison/comparison.png')
