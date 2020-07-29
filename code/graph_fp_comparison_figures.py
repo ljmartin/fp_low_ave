@@ -4,7 +4,8 @@ import matplotlib.patheffects as mpe
 import pandas as pd
 
 import utils
-from scipy.special import logit 
+from scipy.special import logit
+from scipy.stats import norm
 from sklearn.metrics import precision_score, recall_score, roc_auc_score, label_ranking_average_precision_score
 from sklearn.metrics import label_ranking_loss, confusion_matrix, average_precision_score, auc, precision_recall_curve
 
@@ -60,10 +61,13 @@ fig.set_figheight(10)
 
 
 hpd = np.exp(pm.hpd(tr['a']))
-#hpd = pm.hpd(tr['a'])
-#plot AVE scores KDEs:    
-kdeplot(after_morgan_trim['ave_morgan'], ax=ax[0,0], label='AVE$_{Morgan}$')
-kdeplot(after_cats_trim['ave_cats'], ax=ax[0,0], label='AVE$_{CATS}$')
+
+
+#plot AVE scores KDEs:
+mu_morgan, sigma_morgan = norm.fit(after_morgan_trim['ave_morgan'])
+mu_cats, sigma_cats = norm.fit(after_cats_trim['ave_cats'])
+kdeplot(after_morgan_trim['ave_morgan'], ax=ax[0,0], label='AVE$_{Morgan}$, \nμ='+str(np.around(mu_morgan,3))+', σ='+str(np.around(sigma_morgan,3)))
+kdeplot(after_cats_trim['ave_cats'], ax=ax[0,0], label='AVE$_{CATS}$, \nμ='+str(np.around(mu_cats,3))+', σ='+str(np.around(sigma_cats,3)))
 ax[0,0].set_ylabel('Density')
 ax[0,0].set_title('AVE after debiasing')
 utils.plot_fig_label(ax[0,0], 'A.')
