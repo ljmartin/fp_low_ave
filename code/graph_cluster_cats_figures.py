@@ -67,3 +67,86 @@ plt.close(fig)
 
 
 
+
+
+
+
+ef_before_trim = df['ef_before_trim']
+ef_after_trim = df['ef_after_trim']
+
+fig, ax = plt.subplots(1,2)
+fig.set_figheight(5)
+fig.set_figwidth(10)
+
+mu_before, sigma_before = norm.fit(aves_before_trim)
+mu_after, sigma_after = norm.fit(aves_after_trim)
+
+kdeplot(aves_before_trim, ax=ax[0], label=f'Before trim, \nμ={np.around(mu_before,3)}, σ={np.around(sigma_before,3)}')
+kdeplot(aves_after_trim, ax=ax[0], label=f'After trim, \nμ={np.around(mu_after, 3)}, σ={np.around(sigma_after,3)}')
+ax[0].set_ylabel('Density')
+ax[0].set_xlabel('AVE')
+ax[0].grid()
+ax[0].legend()
+utils.plot_fig_label(ax[0], 'A.')
+
+
+#for a,b,c,d in zip(aves_before_trim, aves_after_trim, ap_before_trim, ap_after_trim):
+#    ax[1].plot([a,b], [c,d], lw=0.2, c='k')
+ax[1].scatter(aves_before_trim, ef_before_trim, label='Before trim')
+ax[1].scatter(aves_after_trim, ef_after_trim, label='After trim')
+ax[1].set_xlabel('AVE')
+ax[1].set_ylabel('Average precision')
+ax[1].legend()
+ax[1].grid()
+utils.plot_fig_label(ax[1], 'B.')
+
+for a in ax:
+    a.axvline(0, linestyle= '--', c='k')
+    
+fig.savefig('./processed_data/graph_cluster_cats/supp_ef.png')
+fig.savefig('./processed_data/graph_cluster_cats/supp_ef.tif')
+plt.close(fig)
+
+
+
+
+
+
+mcc_before_trim = df['mcc_before_trim']
+mcc_after_trim = df['mcc_after_trim']
+
+fig, ax = plt.subplots(1,2)
+fig.set_figheight(5)
+fig.set_figwidth(10)
+
+mu_before, sigma_before = norm.fit(aves_before_trim)
+mu_after, sigma_after = norm.fit(aves_after_trim)
+
+kdeplot(aves_before_trim, ax=ax[0], label=f'Before trim, \nμ={np.around(mu_before,3)}, σ={np.around(sigma_before,3)}')
+kdeplot(aves_after_trim, ax=ax[0], label=f'After trim, \nμ={np.around(mu_after, 3)}, σ={np.around(sigma_after,3)}')
+ax[0].set_ylabel('Density')
+ax[0].set_xlabel('AVE')
+ax[0].grid()
+ax[0].legend()
+utils.plot_fig_label(ax[0], 'A.')
+
+
+#for a,b,c,d in zip(aves_before_trim, aves_after_trim, ap_before_trim, ap_after_trim):
+#    ax[1].plot([a,b], [c,d], lw=0.2, c='k')
+ax[1].scatter(aves_before_trim, mcc_before_trim, label='Before trim')
+ax[1].scatter(aves_after_trim, mcc_after_trim, label='After trim')
+ax[1].set_xlabel('AVE')
+ax[1].set_ylabel('Average precision')
+ax[1].legend()
+ax[1].grid()
+utils.plot_fig_label(ax[1], 'B.')
+
+for a in ax:
+    a.axvline(0, linestyle= '--', c='k')
+    
+fig.savefig('./processed_data/graph_cluster_cats/supp_mcc.png')
+fig.savefig('./processed_data/graph_cluster_cats/supp_mcc.tif')
+plt.close(fig)
+
+
+

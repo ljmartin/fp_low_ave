@@ -37,6 +37,7 @@ import pandas as pd
 df = pd.DataFrame(columns=['ave_before_trim', 'ave_after_trim',
                            'ap_before_trim', 'ap_after_trim',
                            'mcc_before_trim', 'mcc_after_trim',
+                           'ef_before_trim', 'ef_after_trim',
                            'cluster_size', 'active_test_fraction', 'inactive_test_fraction'])
 
 
@@ -92,10 +93,10 @@ for _ in tqdm(range(100)):
  
 
     #evaluate a LogReg model using the original single-linkage split
-    results_before_trim = utils.evaluate_split(x_, y_, idx, actives_train_idx, actives_test_idx, inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=True)
+    results_before_trim = utils.evaluate_split(x_, y_, idx, actives_train_idx, actives_test_idx, inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=True, ef=True)
 
     #evaluate a LogReg model using the new (lower AVE) split:
-    results_after_trim = utils.evaluate_split(x_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=True)
+    results_after_trim = utils.evaluate_split(x_, y_, idx, new_actives_train_idx, actives_test_idx, new_inactives_train_idx, inactives_test_idx, auroc=False, ap=True, mcc=True, ef=True)
 
 
     va = actives_test_idx.shape[0]
@@ -105,7 +106,9 @@ for _ in tqdm(range(100)):
     
     df.loc[count] = [ave_before_trim, ave_after_trim,
                      results_before_trim['ap'], results_after_trim['ap'],
-                     results_before_trim['mcc'], results_after_trim['mcc'], clusterSize, va/(va+ta), vi/(vi+ti)]
+                     results_before_trim['mcc'], results_after_trim['mcc'],
+                     results_before_trim['ef'], results_after_trim['ef'],
+                     clusterSize, va/(va+ta), vi/(vi+ti)]
     count+=1
 
 
