@@ -89,8 +89,8 @@ N = len(Z)
 H,X1 = np.histogram( Z, bins = 3000, density=True)
 dx = X1[1] - X1[0]
 F1 = np.cumsum(H)*dx
-ax[1,0].plot(X1[1:], 1-F1)
-ax[1,0].axvline(1, c='k', linestyle='--')
+ax[1,0].plot(X1[1:], 1-F1, c='C5')
+ax[1,0].axvline(1, c='k', linestyle='--',)
 ax[1,0].set_ylabel('Probability')
 ax[1,0].set_xlabel('$\dfrac{AP_{CATS}}{AP_{Morgan}}$')
 ax[1,0].set_title('Probability of CATS vs Morgan performance')
