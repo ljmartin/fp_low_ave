@@ -63,7 +63,7 @@ fig.set_figwidth(13)
 fig.set_figheight(10)
 
 
-hpd = np.exp(pm.hpd(tr['a']))
+hpd = pm.hpd(tr['a'])
 
 
 #plot AVE scores KDEs:
@@ -94,32 +94,31 @@ utils.plot_fig_label(ax[0,1], 'B.')
 
 
 #plot one-tailed estimate:
-Z = np.exp(tr['a'])
-#Z = tr['a']
+Z = np.array(tr['a'])
 N = len(Z)
 H,X1 = np.histogram( Z, bins = 3000, density=True)
 dx = X1[1] - X1[0]
 F1 = np.cumsum(H)*dx
 
-print('Probability that CATS performs better than Morgan is:')
-print((1-F1)[X1[1:]>1][0])
+#print('Probability that CATS performs better than Morgan is:')
+#print((1-F1)[X1[1:]>1][0])
 ax[1,0].plot(X1[1:], 1-F1, c='C5')
-ax[1,0].axvline(1, c='k', linestyle='--',)
+ax[1,0].axvline(0, c='k', linestyle='--',)
 ax[1,0].set_ylabel('Probability')
 ax[1,0].set_xlabel('$MCC_{CATS} - MCC_{Morgan}$')
 ax[1,0].set_title('Probability of CATS vs Morgan performance')
 utils.plot_fig_label(ax[1,0], 'C.')
 
 #plot two-tailed estimate:
-kdeplot(np.exp(tr['a']), ax=ax[1,1], c='C5')
+kdeplot(tr['a'], ax=ax[1,1], c='C5')
 #kdeplot(tr['a'], ax=ax[1,1], c='C5')
 ax[1,1].plot([hpd[0],hpd[1]],[0,0],'-o', c='C5', label='95% credible region')
 print('The maximum a posteriori for performance improvement is:')
-print(np.exp(tr['a'].mean()))
+print(tr['a'].mean())
 print('And the range of performance improvement is:')
 print([hpd[0],hpd[1]])
 #ax[1,1].scatter(tr['a'].mean(), 0, s= 300, facecolor='white',zorder=10,edgecolor='C5')
-ax[1,1].scatter(np.exp(tr['a'].mean()), 0, s= 300, facecolor='white',zorder=10,edgecolor='C5')
+ax[1,1].scatter(tr['a'].mean(), 0, s= 300, facecolor='white',zorder=10,edgecolor='C5')
 ax[1,1].set_xlabel('$MCC_{CATS} - MCC_{Morgan}$')
 ax[1,1].set_ylabel('Density')
 ax[1,1].set_title('Estimated CATS vs Morgan performance')
@@ -132,8 +131,8 @@ for a in ax.flatten():
 #     #a.legend()
 
     
-ax[1,0].axvline(1, linestyle='--', c='k')
-ax[1,1].axvline(1, linestyle='--', c='k')
+ax[1,0].axvline(0, linestyle='--', c='k')
+ax[1,1].axvline(0, linestyle='--', c='k')
 ax[0,0].axvline(0, linestyle='--', c='k')
 ax[0,0].set_xlabel('AVE')
 ax[0,1].set_xlabel('AVE')
