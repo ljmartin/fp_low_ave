@@ -66,12 +66,16 @@ hpd = np.exp(pm.hpd(tr['a']))
 #plot AVE scores KDEs:
 mu_morgan, sigma_morgan = norm.fit(after_morgan_trim['ave_morgan'])
 mu_cats, sigma_cats = norm.fit(after_cats_trim['ave_cats'])
-kdeplot(after_morgan_trim['ave_morgan'], ax=ax[0,0], label='AVE$_{Morgan}$, \nμ='+str(np.around(mu_morgan,3))+', σ='+str(np.around(sigma_morgan,3)))
-kdeplot(after_cats_trim['ave_cats'], ax=ax[0,0], label='AVE$_{CATS}$, \nμ='+str(np.around(mu_cats,3))+', σ='+str(np.around(sigma_cats,3)))
+kdeplot(before_trim['ave_morgan'], ax=ax[0,0], label='AVE$_{Morgan}$,\nbefore debiasing', linestyle='--', c='C0')
+kdeplot(before_trim['ave_cats'], ax=ax[0,0], label='AVE$_{CATS}$,\nbefore debiasing', linestyle='--', c='C1')
+kdeplot(after_morgan_trim['ave_morgan'], ax=ax[0,0], linestyle='-', c='C0',
+        label='AVE$_{Morgan}$, \nμ='+str(np.around(mu_morgan,3))+', σ='+str(np.around(sigma_morgan,3)))
+kdeplot(after_cats_trim['ave_cats'], ax=ax[0,0], linestyle='-', c='C1',
+        label='AVE$_{CATS}$, \nμ='+str(np.around(mu_cats,3))+', σ='+str(np.around(sigma_cats,3)))
 ax[0,0].set_ylabel('Density')
 ax[0,0].set_title('AVE after debiasing')
 utils.plot_fig_label(ax[0,0], 'A.')
-
+ax[0,0].legend(loc='lower left', prop={'size': 12})
 
 
 #plot AVE vs AP:
@@ -93,6 +97,9 @@ N = len(Z)
 H,X1 = np.histogram( Z, bins = 3000, density=True)
 dx = X1[1] - X1[0]
 F1 = np.cumsum(H)*dx
+
+print('Probability that CATS performs better than Morgan is:')
+print((1-F1)[X1[1:]>1][0])
 ax[1,0].plot(X1[1:], 1-F1, c='C5')
 ax[1,0].axvline(1, c='k', linestyle='--',)
 ax[1,0].set_ylabel('Probability')
@@ -104,6 +111,10 @@ utils.plot_fig_label(ax[1,0], 'C.')
 kdeplot(np.exp(tr['a']), ax=ax[1,1], c='C5')
 #kdeplot(tr['a'], ax=ax[1,1], c='C5')
 ax[1,1].plot([hpd[0],hpd[1]],[0,0],'-o', c='C5', label='95% credible region')
+print('The maximum a posteriori for performance improvement is:')
+print(np.exp(tr['a'].mean()))
+print('And the range of performance improvement is:')
+print([hpd[0],hpd[1]])
 #ax[1,1].scatter(tr['a'].mean(), 0, s= 300, facecolor='white',zorder=10,edgecolor='C5')
 ax[1,1].scatter(np.exp(tr['a'].mean()), 0, s= 300, facecolor='white',zorder=10,edgecolor='C5')
 ax[1,1].set_xlabel('$\dfrac{AP_{CATS}}{AP_{Morgan}}$')
