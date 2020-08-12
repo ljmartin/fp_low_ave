@@ -25,8 +25,8 @@ ef = df['ef']
 auroc = df['auroc']
 
 fig, ax = plt.subplots(2,2)
-fig.set_figheight(10)
-fig.set_figwidth(10)
+fig.set_figheight(8)
+fig.set_figwidth(12)
 
 
 metrics = [auroc, ap, mcc, ef]
