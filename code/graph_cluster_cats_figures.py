@@ -60,6 +60,9 @@ utils.plot_fig_label(ax[1], 'B.')
 
 for a in ax:
     a.axvline(0, linestyle= '--', c='k')
+    a.set_xlim(right=0.31)
+    a.set_xticks([0,0.1,0.2, 0.3])
+
     
 fig.savefig('./processed_data/graph_cluster_cats/trim.png')
 fig.savefig('./processed_data/graph_cluster_cats/trim.tif')
@@ -100,8 +103,11 @@ ax[1].legend()
 ax[1].grid()
 utils.plot_fig_label(ax[1], 'B.')
 
+
 for a in ax:
     a.axvline(0, linestyle= '--', c='k')
+    a.set_xlim(right=0.31)
+    a.set_xticks([0,0.1, 0.2, 0.3])
     
 fig.savefig('./processed_data/graph_cluster_cats/supp_ef.png')
 fig.savefig('./processed_data/graph_cluster_cats/supp_ef.tif')
@@ -131,6 +137,7 @@ ax[0].legend()
 utils.plot_fig_label(ax[0], 'A.')
 
 
+
 #for a,b,c,d in zip(aves_before_trim, aves_after_trim, ap_before_trim, ap_after_trim):
 #    ax[1].plot([a,b], [c,d], lw=0.2, c='k')
 ax[1].scatter(aves_before_trim, mcc_before_trim, label='Before trim')
@@ -140,9 +147,12 @@ ax[1].set_ylabel('Matthews correlation coefficient')
 ax[1].legend()
 ax[1].grid()
 utils.plot_fig_label(ax[1], 'B.')
+ax[1].set_xlim(right=0.31)
 
 for a in ax:
     a.axvline(0, linestyle= '--', c='k')
+    a.set_xlim(right=0.31)
+    a.set_xticks([0,0.1, 0.2, 0.3])
     
 fig.savefig('./processed_data/graph_cluster_cats/supp_mcc.png')
 fig.savefig('./processed_data/graph_cluster_cats/supp_mcc.tif')

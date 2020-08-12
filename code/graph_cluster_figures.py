@@ -15,16 +15,6 @@ from tqdm import tqdm
 ##Set plotting parameters:
 utils.set_mpl_params()
 
-#aves_before_trim = np.load('./processed_data/graph_cluster/aves_before_trim.npy')
-#aves_after_trim = np.load('./processed_data/graph_cluster/aves_after_trim.npy')
-#ap_before_trim = np.load('./processed_data/graph_cluster/ap_before_trim.npy')
-#ap_after_trim = np.load('./processed_data/graph_cluster/ap_after_trim.npy')
-
-#targets = np.load('processed_data/graph_cluster/targets.npy', allow_pickle=True)
-#cutoffs = np.load('processed_data/graph_cluster/cutoffs.npy', allow_pickle=True)
-#sizes = np.load('processed_data/graph_cluster/sizes.npy', allow_pickle=True)
-
-
 import pandas as pd
 df = pd.read_csv('./processed_data/graph_cluster/results.csv')
 aves_before_trim = df['ave_before_trim']
@@ -60,19 +50,12 @@ utils.plot_fig_label(ax[1], 'B.')
 
 for a in ax:
     a.axvline(0, linestyle= '--', c='k')
+    a.set_xlim(right=0.31)
+    a.set_xticks([0,0.1,0.2, 0.3])
     
 fig.savefig('./processed_data/graph_cluster/trim.png')
 fig.savefig('./processed_data/graph_cluster/trim.tif')
 plt.close(fig)
-
-
-
-
-
-
-
-
-
 
 
 
@@ -112,6 +95,8 @@ utils.plot_fig_label(ax[1], 'B.')
 
 for a in ax:
     a.axvline(0, linestyle= '--', c='k')
+    a.set_xlim(right=0.31)
+    a.set_xticks([0,0.1,0.2, 0.3])
     
 fig.savefig('./processed_data/graph_cluster/supp_ef.png')
 fig.savefig('./processed_data/graph_cluster/supp_ef.tif')
@@ -155,6 +140,8 @@ utils.plot_fig_label(ax[1], 'B.')
 
 for a in ax:
     a.axvline(0, linestyle= '--', c='k')
+    a.set_xlim(right=0.31)
+    a.set_xticks([0,0.1,0.2, 0.3])
     
 fig.savefig('./processed_data/graph_cluster/supp_mcc.png')
 fig.savefig('./processed_data/graph_cluster/supp_mcc.tif')
