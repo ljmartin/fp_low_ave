@@ -26,7 +26,7 @@ for metric, title in zip(['ap', 'mcc', 'ef'], ['Average Precision', 'Matthews co
     cats = after_cats_trim[metric+'_cats']
     morg = after_morgan_trim[metric+'_morgan']
     
-    for data, lab in zip([cats, morg], ['CATS','Morgan']):
+    for data, lab in zip([morg, cats], ['Morgan','CATS']):
         dens = sm.nonparametric.KDEUnivariate(data)
         dens.fit()
         x =np.linspace(0,max(1, max(max(cats), max(morg))),100)
