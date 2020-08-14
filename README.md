@@ -11,7 +11,7 @@ For the main result, see the figure below.
 - D) But how big is the difference? We estimated the mean improvement with PyMC3. You can see that CATS has about 1.01 - 1.11 improvement, so up to a possible 10%. Of course this is an average over many splits and 100 targets, so for any given target the results might swing the other way! 
 
 
-If you want to perform such an analysis yourself, we recommend first clustering in Morgan-space using the PARIS algorithm - see [sknetwork](https://scikit-network.readthedocs.io/en/latest/) for a super fast implementation that works on large datasets. After clustering, simply simply the "X" nearest neighbors from the training sets, where 'nearest' is measured with respect to the test set.  
+If you want to perform such an analysis yourself, we recommend first clustering in Morgan-space using the PARIS algorithm - see [sknetwork](https://scikit-network.readthedocs.io/en/latest/) for a super fast implementation that works on large datasets. After clustering, simply mask the "X" nearest neighbors from the training sets, where 'nearest' is measured with respect to the test set.  While this does result in data loss, it's increasingly believed that you don't need huge imbalance to get nice performance, see (3) and (4). 
 
 Raise an issue in the tracker or drop a line to lewis dot martin at sydney edu au with any questions/issues. 
 
@@ -29,3 +29,8 @@ Raise an issue in the tracker or drop a line to lewis dot martin at sydney edu a
 >(1) Wallach, Izhar, and Abraham Heifets. "Most ligand-based classification benchmarks reward memorization rather than generalization." Journal of chemical information and modeling 58.5 (2018): 916-932.
 >
 >(2) Sundar, Vikram, and Lucy Colwell. "The Effect of Debiasing Protein Ligand Binding Data on Generalisation." Journal of Chemical Information and Modeling (2019).
+>
+>(3) Caceres, Elena L., Nicholas C. Mew, and Michael J. Keiser. "Adding stochastic negative examples into machine learning improves molecular bioactivity prediction." BioRxiv (2020).
+>
+>(4) de León, Antonio de la Vega, Beining Chen, and Valerie J. Gillet. "Effect of missing data on multitask prediction methods." Journal of cheminformatics 10.1 (2018): 26.
+
