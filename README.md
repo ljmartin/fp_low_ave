@@ -7,9 +7,14 @@ Ligand based virtual screening uses machine learning for drug discovery. In 2018
 For the main result, see the figure below. 
 - A) Debiasing by trimming nearest neighbors from the training set. The starting point for all fingerprints is single-linkage clustering of the Morgan fingerprints. The clusters are randomly sampled to get some test/train data. We then trim the nearest neighbors to the test data from the training data. Observe that AVE for both fingerprints reduces towards zero. 
 - B) The by-now well known relationship between bias (as measured by AVE) and performance. In the manuscript we also show how you game the AVE score with the CATS fingerprint, producing low AVE without this relationship. So - be cautious when using CATS to debias!
-- C) 
+- C) We then did a pairwise comparison between the performance of Morgan-debiased and (correctly) CATS-debiased fingerprints. Conveniently, we only alter the training data in any given evaluation. That means the identity of the test set is exactly the same, facilitating a pairwise comparison. This panel shows the probability that CATS fingerprint performs better. The probability that _relative_ performance is greater than 1 is over 99%. 
+- D) But how big is the difference? We estimated the mean improvement with PyMC3. You can see that CATS has about 1.01 - 1.11 improvement, so up to a possible 10%. Of course this is an average over many splits and 100 targets, so for any given target the results might swing the other way! 
 
-This shows the performance of each of the fingerprints relative to the Morgan fingerprint (A) at zero AVE bias - which is the metric of bias defined in (1). Panel B shows the performance relative to the CATS fingerprint. Morgan is among the worst, while the CATS fingerprint is among the best. One interpretation of this is that the CATS fingerprint, which was designed for scaffold hopping, generalizes better to ligands with different internal graph structure. Conversely the Morgan fingerprint, which is highly effective at differentiating graph structure, is great for nearest-neighbour search but poor at generalizing to differently-structured ligands. 
+
+If you want to perform such an analysis yourself, we recommend first clustering in Morgan-space using the PARIS algorithm - see [sknetwork](https://scikit-network.readthedocs.io/en/latest/) for a super fast implementation that works on large datasets. After clustering, simply simply the "X" nearest neighbors from the training sets, where 'nearest' is measured with respect to the test set.  
+
+Raise an issue in the tracker or drop a line to lewis dot martin at sydney edu au with any questions/issues. 
+
 
 
 
@@ -17,60 +22,6 @@ This shows the performance of each of the fingerprints relative to the Morgan fi
 
 
 
-If you want to create zero-AVE splits in your own work, you could use the code below. Since the critical step (trimming the biased ligands) amounts to masking a sorted array of distances, you might also find it easier to implement your own workflow. 
-
-```python
-import numpy as np
-from scipy.spatial.distance import cdist
-from paris_cluster import ParisClusterer
-import utils
-
-x = np.load('my_features.npy')
-y = np.load('my_labels.npy')
-
-distance_matrix = cdist(x, x, metric='dice') #create a pairiwise distance matrix. Use whatever metric you want
-
-#we use clustered splits. You may want to do random split or time split
-clusterer = ParisClusterer(x)
-clusterer.buildAdjacency() #calculates a sparse adjacency graph using pynndescent
-clusterer.fit() #fits a PARIS clusterer from the sknetwork library
-
-#do a clusterered split:
-clusterer.balanced_cut(200) #aim for clusters about 200 ligands per cluster
-
-#split the ligands:
-idx = np.random.randint(y.shape[1]) #choose a random target index
-clabels = np.unique(clusterer.labels_)
-pos_labels = np.unique(clusterer.labels_[y[:,idx]==1])
-neg_labels = clabels[~np.isin(clabels, pos_labels)]
-test_clusters, train_clusters = utils.split_clusters(pos_labels, neg_labels, 0.2, [0.1,0.1], shuffle=True)
-actives_test_idx, actives_train_idx, inactives_test_idx, inactives_train_idx = utils.get_four_matrices(y_,idx,clusterer,test_clusters,train_clusters)
-
-#trim the biased ligands from the training set:
-inactive_dmat = distance_matrix[inactives_test_idx]
-new_inactives_train_idx = utils.trim(inactive_dmat,
-                                       inactives_train_idx,
-                                       inactives_test_idx,
-                                   fraction_to_trim=0.2)
-                                   
-new_actives_train_idx = utils.trim(active_dmat,
-                                    actives_train_idx,
-                                    actives_test_idx,
-                                     fraction_to_trim=0.2)
-                                     
-#now you have four sets of indices representing the split. 
-#i.e. 
-#actives_test_idx
-#actives_train_idx
-#new_inactives_train_idx
-#new_actives_train_idx
-
-
-```
-
-
-
-Raise an issue in the tracker or drop a line to lewis dot martin at sydney edu au with any questions/issues. 
 
 
 
