@@ -1,6 +1,6 @@
 # fp_generalizability
 
-Ligand based virtual screening uses machine learning for drug discovery. In 2018 Wallach et al. (1) demonstrated that the performance in many benchmarks was strongly correlated with bias in the train/test splits used for evaluation, and the authors of that work also proposed a genetic algorithm to reduce bias. Subsequently, using the genetic algorithm, it was shown by Sundar et al. (2) that the _de facto_ standard featurization (i.e. ECFP a.k.a. Morgan fingerprints) performs poorly when the bias is low. We extend both results - we present an algorithm for fast (~1-2s) unbiased train/test splitting, which allows us to sample hundreds of splits in an afternoon on a laptop, and we use this to compare the performance of 11 different fingerprints. 
+Ligand based virtual screening uses machine learning for drug discovery. In 2018 Wallach et al. (1) demonstrated that the performance in many benchmarks was strongly correlated with bias in the train/test splits used for evaluation, and the authors of that work also proposed a genetic algorithm to reduce bias. Subsequently, using the genetic algorithm, it was shown by Sundar et al. (2) that the _de facto_ standard featurization (i.e. ECFP a.k.a. Morgan fingerprints) performs poorly when the bias is low. We extend both results - we present an algorithm for fast (~1-2s) unbiased train/test splitting, which allows us to sample hundreds of splits in an afternoon on a laptop, and we use this to compare the performance of two fingerprints (Morgan/ECFP and CATS). 
 
 
 
@@ -8,7 +8,7 @@ For the main result, see the figure (panels A and B) below. This shows the perfo
 
 
 
-![result](./code/processed_data/graph_fp_comparison/ave_distribution.png)
+![result](./code/processed_data/graph_fp_comparison/comparison.png)
 
 
 
