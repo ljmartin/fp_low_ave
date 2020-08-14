@@ -6,7 +6,8 @@ Ligand based virtual screening uses machine learning for drug discovery. In 2018
 
 For the main result, see the figure below. 
 - A) Debiasing by trimming nearest neighbors from the training set. The starting point for all fingerprints is single-linkage clustering of the Morgan fingerprints. The clusters are randomly sampled to get some test/train data. We then trim the nearest neighbors to the test data from the training data. Observe that AVE for both fingerprints reduces towards zero. 
-- B) 
+- B) The by-now well known relationship between bias (as measured by AVE) and performance. In the manuscript we also show how you game the AVE score with the CATS fingerprint, producing low AVE without this relationship. So - be cautious when using CATS to debias!
+- C) 
 
 This shows the performance of each of the fingerprints relative to the Morgan fingerprint (A) at zero AVE bias - which is the metric of bias defined in (1). Panel B shows the performance relative to the CATS fingerprint. Morgan is among the worst, while the CATS fingerprint is among the best. One interpretation of this is that the CATS fingerprint, which was designed for scaffold hopping, generalizes better to ligands with different internal graph structure. Conversely the Morgan fingerprint, which is highly effective at differentiating graph structure, is great for nearest-neighbour search but poor at generalizing to differently-structured ligands. 
 
